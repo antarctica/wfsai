@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wfsai"
+description = "Wildlife from Space AI tools"
+authors = [
+    {name = "Digital Innovation Team, British Antarctic Survey", email = "digitalinnovation@bas.ac.uk"}
+]
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">= 3.10"
+classifiers = ["Intended Audience :: Science/Research",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14"
+]
+keywords= ["Polar Science",
+    "Geospatial",
+    "Ecosystem Science",
+    "Wildlife Science"]
+dynamic = ["version", "dependencies", "optional-dependencies"]
+
+[tool.setuptools]
+packages = ["wfsai"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+version = {attr = "wfsai.__version__"}
+optional-dependencies.test = { file = ["requirements-dev.txt"] }
+
+[project.urls]
+Homepage = ""
+Documentation = ""
+Repository = "https://github.com/antarctica/wfsai"
+Issues = ""
+
+[project.scripts]
+wfsai = "wfsai.cli:main"
