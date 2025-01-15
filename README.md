@@ -7,7 +7,7 @@ A pip installable python package to help with the AI workflow stages of detectin
 
 ## Installation
 > ### pip
-> pip install git+https://github.com/antarctica/wfs-ai.git@main
+> `pip install git+https://github.com/antarctica/wfs-ai.git@main`
 
 > ### conda/mamba
-> conda install 
+> `conda install `
