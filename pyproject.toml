@@ -32,14 +32,14 @@ dynamic = ["version", "dependencies", "optional-dependencies"]
 
 [tool.setuptools]
 packages = ["wfsai"]
-
-[tool.setuptools.dynamic]
 dependencies = [
 
 ]
 optional-dependencies = [
 
 ]
+
+[tool.setuptools.dynamic]
 version = {attr = "wfsai.__version__"}
 
 [project.urls]
