@@ -34,9 +34,13 @@ dynamic = ["version", "dependencies", "optional-dependencies"]
 packages = ["wfsai"]
 
 [tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
+dependencies = [
+
+]
+optional-dependencies = [
+
+]
 version = {attr = "wfsai.__version__"}
-optional-dependencies.test = { file = ["requirements-dev.txt"] }
 
 [project.urls]
 Homepage = ""
