@@ -7,12 +7,12 @@ A pip installable python package to help with the AI workflow stages of detectin
 
 ## Installation
 > ### pip
-> `pip install git+https://github.com/antarctica/wfs-ai.git@main`
+> `pip install git+https://github.com/antarctica/wfsai.git@main`
 
 > ### conda/mamba
 > `conda install -n <conda-environment> -c conda-forge git pip`  
 > `conda activate <conda-environment>`  
-> `pip install git+https://github.com/antarctica/wfs-ai.git@main`  
+> `pip install git+https://github.com/antarctica/wfsai.git@main`  
 
 ## Usage
 From the diagram above, often the first step of AI workflow is to obtain a source dataset to answer a scientific question. Datasets may be remote or local to the working environment and it is helpful to set out a framework for how the data will be handled during the workflow.  
