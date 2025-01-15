@@ -43,10 +43,10 @@ optional-dependencies = [
 version = {attr = "wfsai.__version__"}
 
 [project.urls]
-Homepage = ""
-Documentation = ""
+Homepage = "https://github.com/antarctica/wfsai"
+Documentation = "https://github.com/antarctica/wfsai"
 Repository = "https://github.com/antarctica/wfsai"
-Issues = ""
+Issues = "https://github.com/antarctica/wfsai"
 
 [project.scripts]
 wfsai = "wfsai.cli:main"
