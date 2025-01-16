@@ -4,6 +4,7 @@
 #
 # Author: matsco@bas.ac.uk
 
+import sys
 import yaml
 import pathlib
 
@@ -39,9 +40,12 @@ def display(config_file_path):
     """
     display_out = load(config_file_path)
     if display_out is not None:
-        print(display_out)
+        yaml.dump(display_out, sys.stdout)
     else:
         print(".yaml config file has no content")
 
 
 
+# for the config.get() method we can do something like this:
+# git archive --remote=git@gitlab.data.bas.ac.uk:digital-innovation-team/darwin-elephant-seal.git HEAD:configs/ test.yaml | tar -x
+# which will get the single config file from the GitLab repo provided the user 
