@@ -33,10 +33,10 @@ dynamic = ["version", "dependencies", "optional-dependencies"]
 [tool.setuptools]
 packages = ["wfsai"]
 dependencies = [
-
+    "pyyaml",
 ]
 optional-dependencies = [
-
+    "",
 ]
 
 [tool.setuptools.dynamic]
