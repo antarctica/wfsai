@@ -28,16 +28,17 @@ keywords= ["Polar Science",
     "Geospatial",
     "Ecosystem Science",
     "Wildlife Science"]
-dynamic = ["version", "dependencies", "optional-dependencies"]
+dynamic = ["version", ]
 
-[tool.setuptools]
-packages = ["wfsai"]
 dependencies = [
     "pyyaml",
 ]
 optional-dependencies = [
-    "",
+    "pytest",
 ]
+
+[tool.setuptools]
+packages = ["wfsai"]
 
 [tool.setuptools.dynamic]
 version = {attr = "wfsai.__version__"}
