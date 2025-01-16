@@ -33,7 +33,9 @@ dynamic = ["version", ]
 dependencies = [
     "pyyaml",
 ]
-optional-dependencies = [
+
+[project.optional-dependencies]
+dev = [
     "pytest",
 ]
 
