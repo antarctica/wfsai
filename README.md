@@ -10,8 +10,8 @@ A pip installable python package to help with the AI workflow stages of detectin
 > `pip install git+https://github.com/antarctica/wfsai.git@main`
 
 > ### conda/mamba
-> `conda install -n <conda-environment> -c conda-forge git pip`  
-> `conda activate <conda-environment>`  
+> `conda/mamba create -n <environment-name> -c conda-forge git pip`  
+> `conda/mamba activate <environment-name>`  
 > `pip install git+https://github.com/antarctica/wfsai.git@main`  
 
 ## Usage
