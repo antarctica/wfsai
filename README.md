@@ -14,6 +14,16 @@ A pip installable python package to help with the AI workflow stages of detectin
 > `conda/mamba activate <environment-name>`  
 > `pip install git+https://github.com/antarctica/wfsai.git@main`  
 
+## Environment Variables
+If retrieving a configuration from a remote repository then specify the `REMOTE_CONFIG_REPO` environment variable.
+```bash
+REMOTE_CONFIG_REPO=<url>
+```  
+With either remote or local config files, you should specify the `CONFIG_FILE` environment variable.
+```bash
+CONFIG_FILE=<config filename>
+```
+
 ## Usage
 From the diagram above, often the first step of AI workflow is to obtain a source dataset to answer a scientific question. Datasets may be remote or local to the working environment and it is helpful to set out a framework for how the data will be handled during the workflow.  
 For example:
