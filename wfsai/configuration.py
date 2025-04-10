@@ -53,7 +53,7 @@ def retrieve_gitlab(gitlab_repository_url: str,
         print(e.message, e.args)
 
     return return_val
- 
+
 def load(config_file_path: str):
     """
     Load workflow configuration from the supplied configuration yaml
@@ -69,6 +69,25 @@ def load(config_file_path: str):
 
     except Exception as e:
         print(e.message, e.args)
+
+def setup_datastores(pipeline_directory_path: str, config_file: str):
+    """
+    Set up the datastores using the provided pipeline directory and yaml config file.
+    """
+    yaml_path = Path.joinpath(Path(str(pipeline_directory_path)), str(config_file))
+
+    if os.path.isfile(yaml_path):
+        with open(yaml_path) as yamlfile:
+            data_yaml = yaml.safe_load(yamlfile)['datastores']
+
+    for e in data_yaml:
+        if e['local_dir'] is not None:
+            if e['remote_dir'] is not None:
+                if e['symbolic']:
+                    if not os.path.islink(Path.joinpath(Path(str(pipeline_directory_path)), e['local_dir'])):
+                        os.symlink(e['remote_dir'], Path.joinpath(Path(str(pipeline_directory_path)), e['local_dir']))
+            else:
+                os.makedirs(Path.joinpath(Path(str(pipeline_directory_path)), e['local_dir']), exist_ok = True)
 
 
 def display(config_file_path):
