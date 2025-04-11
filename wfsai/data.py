@@ -25,7 +25,7 @@ def retrieve(directory_path: str, config_file: str, data_type: str) -> None:
     yaml_path = Path.joinpath(Path(str(directory_path)), str(config_file))
 
     if _check_config_path_(yaml_path):
-        data_yaml = load(yaml_path)[str(data_type)]
+        data_yaml = _load_(yaml_path)[str(data_type)]
 
         for dir_group in data_yaml:
             # Do specified source and destination directories exist
