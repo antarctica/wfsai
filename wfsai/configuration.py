@@ -10,18 +10,41 @@ import shutil
 import yaml
 import git
 from pathlib import Path
+from typing import Union
 
-def _check_config_path_(config_file_path):
+# Base reusable methods
+def _check_config_path_(config_file_path: str) -> bool:
     """
     Check that the config file path points to a file that exists and
-    that the format is yaml
+    that the format is yaml.
+    This method returns a boolean True if the path is valid,
+    otherwise False.
     """
     return Path(config_file_path).exists() and not \
            Path(config_file_path).is_dir() and \
            Path(config_file_path).suffix == '.yaml'
 
+def _load_(config_file_path: str) -> Union[str, None]:
+    """
+    Load workflow configuration from the supplied configuration yaml.
+    This method returns the loaded yaml content if successful, 
+    otherwise returning None.
+    """
+    try:
+        if _check_config_path_(config_file_path):
+            with open(config_file_path, 'r') as file:
+                content_yaml = yaml.safe_load(file)
+                return content_yaml
+        else:
+            print("Cannot read supplied path, .yaml file must exist")
+            return None
+
+    except Exception as e:
+        print(e.message, e.args)
+        return None
+
 def retrieve_gitlab(gitlab_repository_url: str, 
-                    config_file_name: str) -> Path:
+                    config_file_name: str) -> Union[Path, None]:
     """
     Retrieve a single configuration file from a gitlab repository.
     This method expects the gitlab repository to have a directory 
@@ -55,33 +78,16 @@ def retrieve_gitlab(gitlab_repository_url: str,
     return return_val
 
 
-def load(config_file_path: str):
+def setup_datastores(directory_path: str, config_file: str) -> None:
     """
-    Load workflow configuration from the supplied configuration yaml
-    """
-    try:
-        if _check_config_path_(config_file_path):
-            with open(config_file_path, 'r') as file:
-                content_yaml = yaml.safe_load(file)
-                return content_yaml
-        else:
-            print("Cannot read supplied path, .yaml file must exist")
-            return None
-
-    except Exception as e:
-        print(e.message, e.args)
-
-
-def setup_datastores(directory_path: str, config_file: str):
-    """
-    Set up the datastores using the provided root directory and yaml config file.
+    Set up the datastores using the provided root directory and
+    yaml config file.
+    This method always returns None.
     """
     yaml_path = Path.joinpath(Path(str(directory_path)), str(config_file))
 
     if _check_config_path_(yaml_path):
-        data_yaml = load(yaml_path)['datastores']
-        # with open(yaml_path) as yamlfile:
-        #     data_yaml = yaml.safe_load(yamlfile)['datastores']
+        data_yaml = _load_(yaml_path)['datastores']
 
         for e in data_yaml:
             if e['local_dir'] is not None:
@@ -91,20 +97,20 @@ def setup_datastores(directory_path: str, config_file: str):
                             os.symlink(e['remote_dir'], Path.joinpath(Path(str(directory_path)), e['local_dir']))
                 else:
                     os.makedirs(Path.joinpath(Path(str(directory_path)), e['local_dir']), exist_ok = True)
+    
+    return None
 
 
-def display(config_file_path):
+def display(config_file_path: str) -> None:
     """
-    Display a summary of the supplied config file path
+    Display a summary of the supplied config file.
+    This method prints to sys.stdout and returns None.
     """
-    display_out = load(config_file_path)
+    display_out = _load_(config_file_path)
     if display_out is not None:
         yaml.dump(display_out, sys.stdout)
     else:
         print(".yaml config file has no content")
-
-
-
-# for the config.get() method we can do something like this:
-# git archive --remote=git@gitlab.data.bas.ac.uk:digital-innovation-team/darwin-elephant-seal.git HEAD:configs/ test.yaml | tar -x
-# which will get the single config file from the GitLab repo provided the user 
+    
+    return None
+ 
