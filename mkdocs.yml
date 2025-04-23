@@ -1,0 +1,15 @@
+site_name: wildlife from space ai
+repo_url: https://github.com/antarctica/wfsai/
+theme: readthedocs
+plugins: 
+  - search
+  - mkdocstrings
+  - include-markdown:
+      rewrite_relative_urls: true
+
+nav:
+  - Home: index.md
+  - implementation.md
+  - installation.md
+  - using.md
+  - development.md

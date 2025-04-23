@@ -39,6 +39,11 @@ dependencies = [
 dev = [
     "pytest",
 ]
+documentation = [
+    "mkdocs",
+    "mkdocs-include-markdown-plugin",
+    "mkdocstrings[python]"
+]
 
 [tool.setuptools]
 packages = ["wfsai"]
