@@ -1,5 +1,5 @@
 ![wildlife from space ai logo](img/wildlife-from-space-ai-logo-small.png)
-# darwin-elephant-seal
+# wildlife-from-space-ai
 
 A pip installable python package to help with the AI workflow stages of detecting Wildlife from Space.  
 
