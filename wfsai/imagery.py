@@ -12,9 +12,9 @@ import glob
 from pathlib import Path
 from typing import Optional
 from typing import Literal
+from typing import Union
 from osgeo import gdal
-from wfsai.configuration import _check_config_path_
-from wfsai.configuration import _load_
+from wfsai.configuration import _check_path_
 
 """
 This library is for handling imagery for pre or post AI tasks.
@@ -33,33 +33,58 @@ class maxar:
         self.out = None
 
     def orthorectify(self,
-                     source_image_path: Path,
+                     source_image_path: Union[str, Path],
                      source_type: Literal['pan', 'mul'],
-                     dem_path: Optional[Path] = None,
-                     output_path: Optional[Path] = None) -> tuple:
+                     dem_path: Optional[Union[str, Path]] = None,
+                     output_path: Optional[Union[str, Path]] = None) -> Union[Path, None]:
         """
         Performs orthorectification of either a panchromatic or
         multispectral maxar satellite image.
         A digital elevation model (dem) can be provided which
         must cover the area of the source imagery. If no dem is
         available then dem_path=None.
+
+        If no output path is provided then the default output
+        file is created in the current working directory.
+
+        Returns the path of the successfully orthorectified
+        output file. Otherwise returns None.
         """
-        return_value = tuple()
-        if Path(source_image_path).exists():
+        return_value = None
+
+        ### STEP 1 - Input checking
+        if _check_path_(source_image_path):
             self.src = Path(source_image_path)
-            if Path(self.src).is_dir():
-                print("source image is not a file!")
-                self.src = None
-                return return_value
+
         else:
             print("source image does not exist!")
+            self.src = None
             return return_value
 
         if str(source_type) in ('pan', 'mul'):
-            self.type = str(source_type)
+            self.typ = str(source_type)
         else:
             print("source_type must be 'pan' or 'mul'!")
             return return_value
+        
+        if (dem_path is not None) and _check_path_(dem_path):
+            self.dem = Path(dem_path)
+        else:
+            print("no valid dem specified")
+            self.dem = None
+        
+        if (output_path is not None) and Path(output_path).is_dir():
+            self.out = Path(output_path)
+        else:
+            if output_path is None:
+                self.out = Path.cwd()
+            else:
+                print("output path is not valid")
+                self.out = None
+                return return_value
+        
+        ### STEP 2 - Print inputs and outputs
+        
 
         return return_value
 
