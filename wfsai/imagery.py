@@ -10,6 +10,9 @@ import shutil
 import yaml
 import glob
 from pathlib import Path
+from typing import Optional
+from typing import Literal
+from osgeo import gdal
 from wfsai.configuration import _check_config_path_
 from wfsai.configuration import _load_
 
@@ -23,12 +26,42 @@ class maxar:
     This class is specifically for operations when handling Maxar satellite imagery.
     """
 
-    def __init__():
-        pass
+    def __init__(self):
+        self.src = None
+        self.typ = None
+        self.dem = None
+        self.out = None
 
-    def basic_test(test_string: str) -> str:
-        ret_string = "The test string provided was: '"+test_string+"'"
-        return ret_string
+    def orthorectify(self,
+                     source_image_path: Path,
+                     source_type: Literal['pan', 'mul'],
+                     dem_path: Optional[Path] = None,
+                     output_path: Optional[Path] = None) -> tuple:
+        """
+        Performs orthorectification of either a panchromatic or
+        multispectral maxar satellite image.
+        A digital elevation model (dem) can be provided which
+        must cover the area of the source imagery. If no dem is
+        available then dem_path=None.
+        """
+        return_value = tuple()
+        if Path(source_image_path).exists():
+            self.src = Path(source_image_path)
+            if Path(self.src).is_dir():
+                print("source image is not a file!")
+                self.src = None
+                return return_value
+        else:
+            print("source image does not exist!")
+            return return_value
+
+        if str(source_type) in ('pan', 'mul'):
+            self.type = str(source_type)
+        else:
+            print("source_type must be 'pan' or 'mul'!")
+            return return_value
+
+        return return_value
 
     #TODO What do I want the maxar data handling to actually do?
     # 1. Take in a single satellite image and ortho-rectify.
@@ -41,7 +74,7 @@ class maxar:
 Dump from jupyter notebook
 ==========================
 
-from osgeo import gdal
+
 
 PAN_FILE = '/data/magic_remotesensing/vhr/DPLUS214_Elephant_Seals/dg_10300101070A4E00_SG_Hound_Bay/016418161040_01_P002_PAN/24OCT21115056-P2AS-016418161040_01_P002.TIL'
 MUL_FILE = '/data/magic_remotesensing/vhr/DPLUS214_Elephant_Seals/dg_10300101070A4E00_SG_Hound_Bay/016418161040_01_P002_MUL/24OCT21115057-M2AS-016418161040_01_P002.TIL'
