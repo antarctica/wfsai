@@ -15,6 +15,7 @@ from typing import Literal
 from typing import Union
 from osgeo import gdal
 from wfsai.configuration import _check_path_
+from wfsai.setup_logging import logger
 
 """
 This library is for handling imagery for pre or post AI tasks.
@@ -31,6 +32,37 @@ class maxar:
         self.typ = None
         self.dem = None
         self.out = None
+
+    def _get_warp_options(self, image_type: str, dem_path: Optional[Path] = None) -> object:
+        warp_options = None
+
+        if dem_path is not None:
+            #dem_pan_warp_options
+            if image_type == 'pan':
+                ####taken from https://gdal.org/en/stable/api/python/utilities.html
+                warp_options = gdal.WarpOptions(
+                    rpc = True, # use rpc for georeferencing
+                    dstSRS = 'EPSG:32724',# force output projection
+                    transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
+                    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
+                    xRes=0.5, yRes=0.5, # same as in metadata
+                    srcNodata = 0,
+                    dstNodata = 0)
+            #dem_mul_warp_options
+            if image_type == 'mul':
+                ####taken from https://gdal.org/en/stable/api/python/utilities.html
+                warp_options = gdal.WarpOptions(
+                    rpc = True, # use rpc for georeferencing
+                    srcBands=[1,2,3],
+                    dstBands=[3,2,1],
+                    dstSRS = 'EPSG:32724',# force output projection
+                    transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
+                    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
+                    xRes=1.2, yRes=1.2, # same as in metadata
+                    srcNodata = 0,
+                    dstNodata = 0)
+        
+        return warp_options
 
     def orthorectify(self,
                      source_image_path: Union[str, Path],
@@ -54,37 +86,40 @@ class maxar:
 
         ### STEP 1 - Input checking
         if _check_path_(source_image_path):
-            self.src = Path(source_image_path)
+            self.src = Path(source_image_path).resolve()
 
         else:
-            print("source image does not exist!")
+            logger.error("source image does not exist!")
             self.src = None
             return return_value
 
         if str(source_type) in ('pan', 'mul'):
             self.typ = str(source_type)
         else:
-            print("source_type must be 'pan' or 'mul'!")
+            logger.error("source_type must be 'pan' or 'mul'!")
             return return_value
         
         if (dem_path is not None) and _check_path_(dem_path):
-            self.dem = Path(dem_path)
+            self.dem = Path(dem_path).resolve()
         else:
-            print("no valid dem specified")
+            logger.error("no valid dem specified")
             self.dem = None
         
         if (output_path is not None) and Path(output_path).is_dir():
-            self.out = Path(output_path)
+            self.out = Path(output_path).resolve()
         else:
             if output_path is None:
-                self.out = Path.cwd()
+                self.out = Path.cwd().resolve()
             else:
-                print("output path is not valid")
+                logger.error("output path is not valid")
                 self.out = None
                 return return_value
         
         ### STEP 2 - Print inputs and outputs
-        
+        logger.info("source_image_path:            %s", str(self.src))
+        logger.info("source_type:                  %s", str(self.typ))
+        logger.info("digital_elevation_model_path: %s", str(self.dem))
+        logger.info("output_path:                  %s", str(self.out))
 
         return return_value
 
