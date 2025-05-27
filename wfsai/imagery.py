@@ -32,6 +32,7 @@ class maxar:
         self.typ = None
         self.dem = None
         self.out = None
+        self.opf = None
 
     def _get_warp_options(self, image_type: str, dem_path: Optional[Path] = None) -> object:
         warp_options = None
@@ -115,11 +116,24 @@ class maxar:
                 self.out = None
                 return return_value
         
+        self.opf = self.src.parts[-1].split(".")[:-1][0] + \
+            "_ortho." + self.src.parts[-1].split(".")[-1].replace("TIL", "tif")
+        
         ### STEP 2 - Print inputs and outputs
         logger.info("source_image_path:            %s", str(self.src))
         logger.info("source_type:                  %s", str(self.typ))
         logger.info("digital_elevation_model_path: %s", str(self.dem))
         logger.info("output_path:                  %s", str(self.out))
+        logger.info("output_file:                  %s", str(self.opf))
+
+        ### STEP 3 - Do the orthorectification
+        outpath = str(Path.joinpath(self.out, self.opf))
+        gdal.UseExceptions()
+        ds = gdal.Warp(outpath, self.src, 
+            options=self._get_warp_options(self.typ, self.dem))
+        if ds is not None:
+            ds = None
+            return_value = Path(outpath)
 
         return return_value
 
@@ -133,45 +147,6 @@ class maxar:
 """
 Dump from jupyter notebook
 ==========================
-
-
-
-PAN_FILE = '/data/magic_remotesensing/vhr/DPLUS214_Elephant_Seals/dg_10300101070A4E00_SG_Hound_Bay/016418161040_01_P002_PAN/24OCT21115056-P2AS-016418161040_01_P002.TIL'
-MUL_FILE = '/data/magic_remotesensing/vhr/DPLUS214_Elephant_Seals/dg_10300101070A4E00_SG_Hound_Bay/016418161040_01_P002_MUL/24OCT21115057-M2AS-016418161040_01_P002.TIL'
-
-DEM_FILE = '/data/magic_remotesensing/rema/rema_v2/rema_v2_2m/v2_tiles/SouthGeorgia_REMA_mosaic_2m.tif'
-
-#ORTHO
-
-PAN_ORTHO_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_pan_ortho_dem.tif'
-MUL_ORTHO_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_mul_ortho_dem.tif'
-
-#### taken from https://gdal.org/en/stable/api/python/utilities.html
-pan_warp_options = gdal.WarpOptions(
-    rpc = True, # use rpc for georeferencing
-    dstSRS = 'EPSG:32724',# force output projection
-    transformerOptions = ['RPC_DEM={}'.format(DEM_FILE)], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
-    xRes=0.5, yRes=0.5, # same as in metadata
-    srcNodata = 0,
-    dstNodata = 0
-)
-mul_warp_options = gdal.WarpOptions(
-    rpc = True, # use rpc for georeferencing
-    srcBands=[1,2,3],
-    dstBands=[3,2,1],
-    dstSRS = 'EPSG:32724',# force output projection
-    transformerOptions = ['RPC_DEM={}'.format(DEM_FILE)], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
-    xRes=1.2, yRes=1.2, # same as in metadata
-    srcNodata = 0,
-    dstNodata = 0
-)
-
-ds = gdal.Warp(PAN_ORTHO_FILE, PAN_FILE, options=pan_warp_options)
-ds = None
-ds = gdal.Warp(MUL_ORTHO_FILE, MUL_FILE, options=mul_warp_options)
-ds = None
 
 # ORTHO WITHOUT DEM
 
