@@ -30,6 +30,8 @@ class maxar:
     def __init__(self):
         self.src = None
         self.typ = None
+        self.xres = None
+        self.yres = None
         self.dem = None
         self.out = None
         self.opf = None
@@ -45,8 +47,8 @@ class maxar:
                     rpc = True, # use rpc for georeferencing
                     dstSRS = 'EPSG:32724',# force output projection
                     transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-                    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
-                    xRes=0.5, yRes=0.5, # same as in metadata
+                    #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
+                    xRes=self.xres, yRes=self.yres, # same as in metadata
                     srcNodata = 0,
                     dstNodata = 0)
             #dem_mul_warp_options
@@ -58,8 +60,8 @@ class maxar:
                     dstBands=[3,2,1],
                     dstSRS = 'EPSG:32724',# force output projection
                     transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-                    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
-                    xRes=1.2, yRes=1.2, # same as in metadata
+                    #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
+                    xRes=self.xres, yRes=self.yres, # same as in metadata
                     srcNodata = 0,
                     dstNodata = 0)
         
@@ -68,11 +70,16 @@ class maxar:
     def orthorectify(self,
                      source_image_path: Union[str, Path],
                      source_type: Literal['pan', 'mul'],
+                     pixel_size: Optional[Union[tuple, list]] = None,
                      dem_path: Optional[Union[str, Path]] = None,
                      output_path: Optional[Union[str, Path]] = None) -> Union[Path, None]:
         """
         Performs orthorectification of either a panchromatic or
         multispectral maxar satellite image.
+
+        If no pixel size (x_meters, y_meters) is provided, the
+        pixel size of the source image will be used.
+
         A digital elevation model (dem) can be provided which
         must cover the area of the source imagery. If no dem is
         available then dem_path=None.
@@ -100,6 +107,16 @@ class maxar:
             logger.error("source_type must be 'pan' or 'mul'!")
             return return_value
         
+        if (pixel_size is not None):
+            if type(pixel_size) in (tuple, list):
+                if len(pixel_size) == 1:
+                    self.xres = self.yres = float(pixel_size)
+                elif len(pixel_size) == 2:
+                    self.xres, self.yres = [float(xy) for xy in pixel_size]
+                else:
+                    logger.error("unexpected length of pixel size(s)")
+                    return return_value
+
         if (dem_path is not None) and _check_path_(dem_path):
             self.dem = Path(dem_path).resolve()
         else:
@@ -126,7 +143,19 @@ class maxar:
         logger.info("output_path:                  %s", str(self.out))
         logger.info("output_file:                  %s", str(self.opf))
 
-        ### STEP 3 - Do the orthorectification
+        ### STEP 3 - Get the x and y pixel resolution
+        if pixel_size == None:
+            gdal.UseExceptions()
+            with gdal.Open(self.src) as tempds:
+                geotransform = tempds.GetGeoTransform()
+                logger.info("geotransform:                 %s", str(geotransform))
+                self.xres = geotransform[1]
+                self.yres = geotransform[5] * -1.0
+        else:
+            pass
+        logger.info("pixel_resolutions:            x: %s , y: %s", str(self.xres), str(self.yres))
+
+        ### STEP 4 - Do the orthorectification
         outpath = str(Path.joinpath(self.out, self.opf))
         gdal.UseExceptions()
         ds = gdal.Warp(outpath, self.src, 
