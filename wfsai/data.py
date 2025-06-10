@@ -4,10 +4,8 @@
 #
 # Author: matsco@bas.ac.uk
 
-import sys
 import os
 import shutil
-import yaml
 import glob
 from pathlib import Path
 from wfsai.configuration import _check_config_path_

@@ -13,15 +13,23 @@ from pathlib import Path
 from typing import Union
 
 # Base reusable methods
-def _check_config_path_(config_file_path: str) -> bool:
+def _check_path_(file_path: Union[str, Path]) -> bool:
+    """
+    Check that the file of a path exists and that it
+    is not a directory.
+    """
+    return Path(file_path).exists() and not \
+           Path(file_path).is_dir()
+
+
+def _check_config_path_(config_file_path: Union[str, Path]) -> bool:
     """
     Check that the config file path points to a file that exists and
     that the format is yaml.
     This method returns a boolean True if the path is valid,
     otherwise False.
     """
-    return Path(config_file_path).exists() and not \
-           Path(config_file_path).is_dir() and \
+    return _check_path_(Path(config_file_path)) and \
            Path(config_file_path).suffix == '.yaml'
 
 def _load_(config_file_path: str) -> Union[str, None]:
