@@ -69,6 +69,7 @@ class maxar:
 
     def orthorectify(self,
                      source_image_path: Union[str, Path],
+                     *args, 
                      source_type: Literal['pan', 'mul'],
                      pixel_size: Optional[Union[tuple, list]] = None,
                      dem_path: Optional[Union[str, Path]] = None,

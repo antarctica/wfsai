@@ -11,5 +11,6 @@ nav:
   - Home: index.md
   - implementation.md
   - installation.md
+  - tutorial.md
   - using.md
   - development.md
