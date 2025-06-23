@@ -65,6 +65,34 @@ class maxar:
                     srcNodata = 0,
                     dstNodata = 0)
         
+        else:
+            #without_dem_pan_warp_options
+            if image_type == 'pan':
+                #### taken from https://gdal.org/en/stable/api/python/utilities.html
+                warp_options = gdal.WarpOptions(
+                    rpc = True, # use rpc for georeferencing
+                    dstSRS = 'EPSG:32724',# force output projection
+                    transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
+                    #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
+                    xRes=self.xres, yRes=self.yres, # same as in metadata
+                    # srcNodata = 0,
+                    # dstNodata = 0
+                )
+            #without_dem_mul_warp_options
+            if image_type == 'mul':
+                #### taken from https://gdal.org/en/stable/api/python/utilities.html
+                warp_options = gdal.WarpOptions(
+                    rpc = True, # use rpc for georeferencing
+                    srcBands=[1,2,3],
+                    dstBands=[3,2,1],
+                    dstSRS = 'EPSG:32724',# force output projection
+                    transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
+                    #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
+                    xRes=self.xres, yRes=self.yres, # same as in metadata
+                    # srcNodata = 0,
+                    # dstNodata = 0
+                )
+        
         return warp_options
 
     def orthorectify(self,
@@ -92,6 +120,9 @@ class maxar:
         output file. Otherwise returns None.
         """
         return_value = None
+
+        logger.info("Starting ortho-rectification: %s, %s", 
+                    str(source_image_path), str(source_type))
 
         ### STEP 1 - Input checking
         if _check_path_(source_image_path):
@@ -121,7 +152,7 @@ class maxar:
         if (dem_path is not None) and _check_path_(dem_path):
             self.dem = Path(dem_path).resolve()
         else:
-            logger.error("no valid dem specified")
+            logger.warning("no valid dem specified, continuing without dem")
             self.dem = None
         
         if (output_path is not None) and Path(output_path).is_dir():
@@ -134,8 +165,9 @@ class maxar:
                 self.out = None
                 return return_value
         
+        ortho_tag = "_ortho_const." if self.dem == None else "_ortho."
         self.opf = self.src.parts[-1].split(".")[:-1][0] + \
-            "_ortho." + self.src.parts[-1].split(".")[-1].replace("TIL", "tif")
+            ortho_tag + self.src.parts[-1].split(".")[-1].replace("TIL", "tif")
         
         ### STEP 2 - Print inputs and outputs
         logger.info("source_image_path:            %s", str(self.src))
@@ -177,39 +209,6 @@ class maxar:
 """
 Dump from jupyter notebook
 ==========================
-
-# ORTHO WITHOUT DEM
-
-PAN_ORTHO_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_pan_ortho_const.tif'
-MUL_ORTHO_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_mul_ortho_const.tif'
-
-#### taken from https://gdal.org/en/stable/api/python/utilities.html
-
-pan_warp_options = gdal.WarpOptions(
-    rpc = True, # use rpc for georeferencing
-    dstSRS = 'EPSG:32724',# force output projection
-    transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
-    xRes=0.5, yRes=0.5, # same as in metadata
-    # srcNodata = 0,
-    # dstNodata = 0
-)
-mul_warp_options = gdal.WarpOptions(
-    rpc = True, # use rpc for georeferencing
-    srcBands=[1,2,3],
-    dstBands=[3,2,1],
-    dstSRS = 'EPSG:32724',# force output projection
-    transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
-    outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
-    xRes=1.2, yRes=1.2, # same as in metadata
-    # srcNodata = 0,
-    # dstNodata = 0
-)
-
-ds = gdal.Warp(PAN_ORTHO_FILE, PAN_FILE, options=pan_warp_options)
-ds = None
-ds = gdal.Warp(MUL_ORTHO_FILE, MUL_FILE, options=mul_warp_options)
-ds = None
 
 # Pansharpening
 
