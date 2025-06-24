@@ -26,4 +26,14 @@ print(m.orthorectify(MUL_FILE, source_type='mul', dem_path=DEM_FILE, pixel_size=
 
 # Orthorectify MUL file without using Digital Elevation Model
 print(m.orthorectify(MUL_FILE, source_type='mul', pixel_size=(1.2, 1.2)))
+
+# Pan-Sharpen PAN & MUL using Digital Elevation Model
+ORTHO_PAN_FILE = './24OCT21115056-P2AS-016418161040_01_P002_ortho.tif'
+ORTHO_MUL_FILE = './24OCT21115057-M2AS-016418161040_01_P002_ortho.tif'
+print(m.pansharpen(ORTHO_PAN_FILE, ORTHO_MUL_FILE))
+
+# Pan-Sharpen PAN & MUL without using Digital Elevation Model
+CONST_PAN_FILE = './24OCT21115056-P2AS-016418161040_01_P002_ortho_const.tif'
+CONST_MUL_FILE = './24OCT21115057-M2AS-016418161040_01_P002_ortho_const.tif'
+print(m.pansharpen(CONST_PAN_FILE, CONST_MUL_FILE))
 ```
