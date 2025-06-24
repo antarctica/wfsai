@@ -26,6 +26,17 @@ print(m.orthorectify(MUL_FILE, source_type='mul', dem_path=DEM_FILE, pixel_size=
 
 # Orthorectify MUL file without using Digital Elevation Model
 print(m.orthorectify(MUL_FILE, source_type='mul', pixel_size=(1.2, 1.2)))
+```
+
+---
+
+- ## Pan-sharpening of ortho-rectified MAXAR Worldview imagery
+
+```python
+from wfsai import imagery
+
+# Set up maxar image processor
+m = imagery.maxar()
 
 # Pan-Sharpen PAN & MUL using Digital Elevation Model
 ORTHO_PAN_FILE = './24OCT21115056-P2AS-016418161040_01_P002_ortho.tif'
