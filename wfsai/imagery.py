@@ -199,60 +199,115 @@ class maxar:
 
         return return_value
 
-    #TODO What do I want the maxar data handling to actually do?
-    # 1. Take in a single satellite image and ortho-rectify.
-    # 2. Take in both PAN and MUL ortho-rectified images and output
-    #    a pan sharpened image.
-    
 
+    def pansharpen(self,
+                   pan_image_path: Union[str, Path],
+                   mul_image_path: Union[str, Path],
+                   *args,
+                   output_path: Optional[Union[str, Path]] = None) -> Union[Path, None]:
+        """
+        Performs orthorectification of either a panchromatic or
+        multispectral maxar satellite image.
 
-"""
-Dump from jupyter notebook
-==========================
+        If no pixel size (x_meters, y_meters) is provided, the
+        pixel size of the source image will be used.
 
-# Pansharpening
+        A digital elevation model (dem) can be provided which
+        must cover the area of the source imagery. If no dem is
+        available then dem_path=None.
 
-### Currently the only supported pansharpening algorithm is a "weighted" Brovey algorithm.  https://gdal.org/en/stable/drivers/raster/vrt.html#gdal-vrttut-pansharpen
+        If no output path is provided then the default output
+        file is created in the current working directory.
 
-PAN_ORTHO_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_pan_ortho_const.tif'
-MUL_ORTHO_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_mul_ortho_const.tif'
+        Returns the path of the successfully orthorectified
+        output file. Otherwise returns None.
+        """
+        return_value = None
 
-PSH_FILE = '/data/wfs/darwin-elephant-seal/matsco/wfsai/python_psh_ortho_const.tif'
+        # Currently the only supported pansharpening algorithm is a "weighted" Brovey algorithm. 
+        # https://gdal.org/en/stable/drivers/raster/vrt.html#gdal-vrttut-pansharpen
 
-pan_ds = gdal.Open(PAN_ORTHO_FILE)
-pan_band = pan_ds.GetRasterBand(1)
+        logger.info("Starting pan-sharpening: %s, %s", 
+                    str(pan_image_path), str(mul_image_path))
 
-mul_ds = gdal.Open(MUL_ORTHO_FILE)
-num_spectral_bands = mul_ds.RasterCount
-spectral_bands = [mul_ds.GetRasterBand(i + 1) for i in range(num_spectral_bands)]
+        self.src = [None, None]
 
-#### xml format https://gdal.org/en/stable/drivers/raster/vrt.html#gdal-vrttut-pansharpen
-vrt_xml = f'''
+        ### STEP 1 - Input checking
+        if _check_path_(pan_image_path):
+            self.src[0] = Path(pan_image_path).resolve()
+
+        else:
+            logger.error("pan source image does not exist!")
+            self.src = None
+            return return_value
+        
+        if _check_path_(mul_image_path):
+            self.src[1] = Path(mul_image_path).resolve()
+
+        else:
+            logger.error("mul source image does not exist!")
+            self.src = None
+            return return_value
+        
+        if (output_path is not None) and Path(output_path).is_dir():
+            self.out = Path(output_path).resolve()
+        else:
+            if output_path is None:
+                self.out = Path.cwd().resolve()
+            else:
+                logger.error("output path is not valid")
+                self.out = None
+                return return_value
+
+        # Use the MUL filename as output from pan-sharpening
+        sharp_tag = "_psh."
+        self.opf = self.src[1].parts[-1].split(".")[:-1][0] + sharp_tag + "tif"
+
+        ### STEP 2 - Print inputs and outputs
+        logger.info("pan_image_path:               %s", str(self.src[0]))
+        logger.info("mul_image_path:               %s", str(self.src[1]))
+        logger.info("output_path:                  %s", str(self.out))
+        logger.info("output_file:                  %s", str(self.opf))
+
+        ### STEP 3 - load the imagery PAN & MUL
+        gdal.UseExceptions()
+        pan_dataset = gdal.Open(self.src[0])
+        pan_band = pan_dataset.GetRasterBand(1)
+
+        mul_dataset = gdal.Open(self.src[1])
+        num_spectral_bands = mul_dataset.RasterCount
+        spectral_bands = [mul_dataset.GetRasterBand(i + 1) for i in range(num_spectral_bands)]
+        logger.info("panchromatic bands:           %s", str(1))
+        logger.info("multispectral bands:          %s", str(num_spectral_bands))
+
+        ### STEP 4 - define the XML pansharpening config
+        #### xml format https://gdal.org/en/stable/drivers/raster/vrt.html#gdal-vrttut-pansharpen
+        virtual_raster_format_xml = f'''
 <VRTDataset subClass="VRTPansharpenedDataset">
     <PansharpeningOptions>
         <PanchroBand>
-            <SourceFilename relativeToVRT="1">{PAN_ORTHO_FILE}</SourceFilename>
+            <SourceFilename relativeToVRT="1">{str(self.src[0])}</SourceFilename>
             <OpenOptions>
                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
             </OpenOptions>
             <SourceBand>1</SourceBand>
         </PanchroBand>
         <SpectralBand dstBand="1">
-            <SourceFilename relativeToVRT="1">{MUL_ORTHO_FILE}</SourceFilename>
+            <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
             <OpenOptions>
                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
             </OpenOptions>
             <SourceBand>1</SourceBand>
         </SpectralBand>
         <SpectralBand dstBand="2">
-            <SourceFilename relativeToVRT="1">{MUL_ORTHO_FILE}</SourceFilename>
+            <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
             <OpenOptions>
                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
             </OpenOptions>
             <SourceBand>2</SourceBand>
         </SpectralBand>
         <SpectralBand dstBand="3">
-            <SourceFilename relativeToVRT="1">{MUL_ORTHO_FILE}</SourceFilename>
+            <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
             <OpenOptions>
                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
             </OpenOptions>
@@ -261,9 +316,16 @@ vrt_xml = f'''
     </PansharpeningOptions>
 </VRTDataset>
 '''
+        
+        ### STEP 5 - Do the pan-sharpening
+        outpath = str(Path.joinpath(self.out, self.opf))
+        gdal.UseExceptions()
 
-vrt_ds = gdal.CreatePansharpenedVRT(vrt_xml, pan_band, spectral_bands) 
-psh_ds = gdal.Translate(PSH_FILE, vrt_ds, noData=0, creationOptions=['COMPRESS=LZW', 'BIGTIFF=YES'])
-psh_ds = None
+        vrt_ds = gdal.CreatePansharpenedVRT(virtual_raster_format_xml, pan_band, spectral_bands) 
+        psh_ds = gdal.Translate(outpath, vrt_ds, noData=0, creationOptions=['COMPRESS=LZW', 'BIGTIFF=YES'])
 
-"""
+        if psh_ds is not None:
+            psh_ds = None
+            return_value = Path(outpath)
+
+        return return_value
