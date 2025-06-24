@@ -5,6 +5,8 @@ A pip installable python package to help with the AI workflow stages of detectin
 ![Typical AI Image analysis workflow](https://osu-wams-blogs-uploads.s3.amazonaws.com/blogs.dir/2115/files/2024/12/A.I.-Model-768x432.png)  
 (diagram courtesy of [this](https://blogs.oregonstate.edu/gemmlab/2024/12/23/demystifying-ai-a-brief-overview-of-image-pre-processing-and-a-machine-learning-workflow/) blogpost.)
 
+Documentation for this package is temporarily hosted [here](https://basweb.nerc-bas.ac.uk/~matsco/projects/wfsai/)
+
 ## Installation
 > ### pip
 > `pip install git+https://github.com/antarctica/wfsai.git@main`
