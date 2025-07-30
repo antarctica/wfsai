@@ -36,7 +36,10 @@ class maxar:
         self.out = None
         self.opf = None
 
-    def _get_warp_options(self, image_type: str, dem_path: Optional[Path] = None) -> object:
+    def _get_warp_options(self, image_type: str, 
+                            dem_path: Union[Path, None],
+                            src_bands: Union[list, None],
+                            dst_bands: Union[list, None] ) -> object:
         warp_options = None
 
         if dem_path is not None:
@@ -56,8 +59,8 @@ class maxar:
                 ####taken from https://gdal.org/en/stable/api/python/utilities.html
                 warp_options = gdal.WarpOptions(
                     rpc = True, # use rpc for georeferencing
-                    srcBands=[1,2,3],
-                    dstBands=[3,2,1],
+                    srcBands=src_bands,
+                    dstBands=dst_bands,
                     dstSRS = 'EPSG:32724',# force output projection
                     transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
                     #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
@@ -83,8 +86,8 @@ class maxar:
                 #### taken from https://gdal.org/en/stable/api/python/utilities.html
                 warp_options = gdal.WarpOptions(
                     rpc = True, # use rpc for georeferencing
-                    srcBands=[1,2,3],
-                    dstBands=[3,2,1],
+                    srcBands=src_bands,
+                    dstBands=dst_bands,
                     dstSRS = 'EPSG:32724',# force output projection
                     transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
                     #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
@@ -100,6 +103,8 @@ class maxar:
                      *args, 
                      source_type: Literal['pan', 'mul'],
                      pixel_size: Optional[Union[tuple, list]] = None,
+                     src_bands: Optional[list] = None,
+                     dst_bands: Optional[list] = None,
                      dem_path: Optional[Union[str, Path]] = None,
                      output_path: Optional[Union[str, Path]] = None) -> Union[Path, None]:
         """
@@ -115,6 +120,9 @@ class maxar:
 
         If no output path is provided then the default output
         file is created in the current working directory.
+
+        If no xxx_bands are provided then orthorectification will
+        be performed on all bands in the original order.
 
         Returns the path of the successfully orthorectified
         output file. Otherwise returns None.
@@ -165,6 +173,11 @@ class maxar:
                 self.out = None
                 return return_value
         
+        if src_bands is None and dst_bands is not None:
+            logger.error("dst_bands cannot be specified without src_bands")
+            self.out = None
+            return return_value
+        
         ortho_tag = "_ortho_const." if self.dem == None else "_ortho."
         self.opf = self.src.parts[-1].split(".")[:-1][0] + \
             ortho_tag + self.src.parts[-1].split(".")[-1].replace("TIL", "tif")
@@ -188,11 +201,26 @@ class maxar:
             pass
         logger.info("pixel_resolutions:            x: %s , y: %s", str(self.xres), str(self.yres))
 
+        ### STEP 3.5 - Work out number of raster bands
+        if src_bands is None:
+            gdal.UseExceptions()
+            with gdal.Open(self.src) as dataset:
+                numbands = dataset.RasterCount
+                bandlist = [i for i in range(numbands)]
+                bandlist = list(set([1 if i == 0 else i for i in bandlist]))
+                src_bands = dst_bands = bandlist
+        elif src_bands is not None and dst_bands is None:
+            dst_bands = src_bands
+        else:
+            pass
+        logger.info("source bands:                 %s", str(src_bands))
+        logger.info("destination bands:            %s", str(dst_bands))
+
         ### STEP 4 - Do the orthorectification
         outpath = str(Path.joinpath(self.out, self.opf))
         gdal.UseExceptions()
         ds = gdal.Warp(outpath, self.src, 
-            options=self._get_warp_options(self.typ, self.dem))
+            options=self._get_warp_options(self.typ, self.dem, src_bands, dst_bands))
         if ds is not None:
             ds = None
             return_value = Path(outpath)
