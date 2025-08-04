@@ -357,3 +357,42 @@ class maxar:
             return_value = Path(outpath)
 
         return return_value
+
+
+class tiling:
+
+    """
+    This class is specifically for tiling operations on satellite imagery.
+    """
+
+    def __init__(self):
+        self.src = None
+    
+    def tile(self,
+             source_image_path: Union[str, Path],
+             chunk_dimensions: Union[tuple, list],
+             *args, 
+             yx_px_step: Optional[Union[tuple, list]] = (0,0),
+             output_dir_path: Optional[Union[str, Path]] = None) -> None:
+        """
+        Performs tiling of a geotiff satellite image. Given the
+        source_image_path and chunk_dimensions.
+
+        The chunk_dimensions should be a three element tuple or
+        list with the first element being the number of
+        spectral_bands, then the chunk_height followed by
+        chunk_width, both in pixels. i.e:
+          (spectral_bands, chunk_height, chunk_width)
+
+        The optional yx_px_step parameter can be provided if
+        stepped offset tiles are required (tiles will overlap).
+        i.e:
+          (y_pixel_step, x_pixel_step)
+
+        If no output_dir_path is provided then the default output
+        directory for the tiles is the same as the input file's
+        directory.
+
+        Returns None.
+        """
+        return_value = None
