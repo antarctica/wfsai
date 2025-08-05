@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # File Version: 2025-05-14: First version
+#               2025-08-04: Second version
 #
 # Author: matsco@bas.ac.uk
 
@@ -9,11 +10,17 @@ import os
 import shutil
 import yaml
 import glob
+import dask
+import rioxarray as rxr
 from pathlib import Path
 from typing import Optional
 from typing import Literal
 from typing import Union
 from osgeo import gdal
+from math import ceil
+import pandas as pd
+from matplotlib import pyplot as plt
+from dask import delayed
 from wfsai.configuration import _check_path_
 from wfsai.setup_logging import logger
 
@@ -355,5 +362,208 @@ class maxar:
         if psh_ds is not None:
             psh_ds = None
             return_value = Path(outpath)
+
+        return return_value
+
+
+class tiling:
+
+    """
+    This class is specifically for tiling operations on satellite imagery.
+    """
+
+    def __init__(self):
+        self.src = None
+        self.output_dir_path = None
+        self.chunk_dimensions = None
+        self.yx_px_step = None
+        self.bands = None
+        self.png_dir_path = None
+    
+    ######################################################
+# [3.0] Method for processing each chunk
+    def _process_chunk(self,
+                       x_idx,
+                       y_idx,
+                       chunk_data,
+                       output_dir,
+                       pngs_dir,
+                       rgb_bands,
+                       tiff_ref):
+        """Save scene as tiles using dask chunks, 
+        export to geotiff and png."""
+
+        # If chunk is empty don't save
+        if bool(chunk_data.isnull().all()):
+            return None # Skip saving empty chunks  
+
+        else:
+            # Save raster tile
+            tile_filename = f"{tiff_ref}_tile_{x_idx}_{y_idx}.tif"
+            png_filename = f"{tiff_ref}_tile_{x_idx}_{y_idx}.png"
+            tile_raster_path = Path.joinpath(output_dir, tile_filename)
+
+            size_string = "("+str(chunk_data.sizes["y"])+","+str(chunk_data.sizes["x"])+")"
+            logger.info("Saving raster: %s %s", str(Path(tile_raster_path).name), size_string)
+            chunk_data.rio.to_raster(tile_raster_path, driver="GTiff", compress='lzw')
+
+            if pngs_dir is not None:
+                # Save png file
+                plt.rcParams['figure.max_open_warning'] = 500
+                tile_png_path = Path.joinpath(pngs_dir, png_filename)
+                logger.info("Saving png: %s", str(Path(tile_png_path).name))
+                chunk_data.sel(band=rgb_bands).plot.imshow(robust=True, size=6)
+                fig = plt.gcf()
+                fig.savefig(Path(tile_png_path), bbox_inches="tight")
+                plt.close(fig)
+
+            return tile_raster_path
+
+
+
+
+    def tile(self,
+             source_image_path: Union[str, Path],
+             chunk_dimensions: Union[tuple, list],
+             *args, 
+             yx_px_step: Optional[Union[tuple, list]] = None,
+             png_dir_path: Optional[Union[str, Path]] = None,
+             bands: Optional[list] = None,
+             output_dir_path: Optional[Union[str, Path]] = None) -> None:
+        """
+        Performs tiling of a geotiff satellite image. Given the
+        source_image_path and chunk_dimensions.
+
+        The chunk_dimensions should be a three element tuple or
+        list with the first element being the number of
+        spectral_bands, then the chunk_height followed by
+        chunk_width, both in pixels. i.e:
+          (spectral_bands, chunk_height, chunk_width)
+
+        The optional yx_px_step parameter can be provided if
+        stepped offset tiles are required (tiles will overlap).
+        i.e:
+          (y_pixel_step, x_pixel_step)
+        
+        The optional png_dir_path will produce summary pngs for
+        all tiles in the directory specified. If no directory is
+        specified then no pngs are created. PNG creation is slow.
+
+        The optional bands allows specific bands to be selected
+        for the output tiles (this also determines the band
+        order). If bands is not specified, the original image
+        bands and order are used.
+
+        If no output_dir_path is provided then the default output
+        directory for the tiles is the same as the input file's
+        directory.
+
+        A reference CSV file is created in the output directory
+        showing all tiles created and their image reference.
+
+        Returns None.
+        """
+        return_value = None
+
+        # check the source image path
+        if _check_path_(source_image_path):
+            self.src = Path(source_image_path).resolve()
+        
+        # check the chunk dimensions
+        if type(chunk_dimensions) in [tuple, list]:
+            if len(chunk_dimensions) == len([0,0,0]):
+                self.chunk_dimensions = chunk_dimensions
+            else:
+                logger.error("Chunk dimensions size NOT equal to 3!")
+        else:
+            logger.error("Chunk dimensions not of correct type!")
+
+        # check the bands
+        if bands is not None:
+            self.bands = bands
+        else:
+            raster = rxr.open_rasterio(Path(source_image_path), masked=True)
+            self.bands = raster.band.to_dict()['data']
+
+        # check the output_dir
+        if output_dir_path is not None:
+            if Path(Path(output_dir_path).resolve()).is_dir():
+                self.output_dir_path = Path(output_dir_path).resolve()
+            else:
+                logger.error("output_dir_path is not a directory!")
+                self.output_dir_path = None
+        else:
+            self.output_dir_path = \
+              Path(source_image_path).resolve().parent
+
+        # check yx_px_step
+        if yx_px_step is not None:
+            if type(yx_px_step) in [tuple, list]:
+                if len(yx_px_step) == len([0,0]):
+                    self.yx_px_step = yx_px_step
+                else:
+                    logger.error("yx_px_step NOT of length 2")
+                    self.yx_px_step = None
+            else:
+                logger.error("yx_px_step is NOT tuple or list")
+                self.yx_px_step = None
+        else:
+            self.yx_px_step = self.chunk_dimensions[1:]
+
+
+        # check for pngs_dir
+        if png_dir_path is not None:
+            if Path(Path(png_dir_path).resolve()).is_dir():
+                self.png_dir_path = Path(png_dir_path).resolve()
+            else:
+                logger.error("png_dir_path is not a directory!")
+                self.png_dir_path = None
+        else:
+            self.png_dir_path = None
+        
+
+        tiff_ref = os.path.basename(self.src).split(".")[0]
+        logger.info("Starting tiling of image:     %s", str(Path(self.src).name))
+        logger.info("Image tiff ref:               %s", str(tiff_ref))
+        logger.info("output_dir_path:              %s", str(self.output_dir_path))
+        logger.info("chunk_dimensions:             %s", str(self.chunk_dimensions))
+        logger.info("bands:                        %s", str(self.bands))
+        logger.info("yx_px_step:                   %s", str(self.yx_px_step))
+        logger.info("png_dir_path:                 %s", str(self.png_dir_path))
+
+        raster = rxr.open_rasterio(Path(self.src),
+                    chunks=self.chunk_dimensions,
+                    masked=True)
+
+        # Create Dask delayed tasks for each chunk
+        delayed_tasks = []
+
+        for y_idx in range(ceil(raster.sizes["y"] / self.yx_px_step[0])):
+            
+            for x_idx in range(ceil(raster.sizes["x"] / self.yx_px_step[1])):
+
+                # Account for not slicing over the right and bottom edges
+                ydim = raster.sizes["y"] - ((y_idx * self.yx_px_step[0]) + self.chunk_dimensions[1])
+                xdim = raster.sizes["x"] - ((x_idx * self.yx_px_step[1]) + self.chunk_dimensions[2])
+                ybackstep = ydim if ydim < 0 else 0
+                xbackstep = xdim if xdim < 0 else 0
+
+                # Select chunk
+                chunk = raster.isel(
+                    y=slice((y_idx * self.yx_px_step[0]) + ybackstep, (y_idx * self.yx_px_step[0]) + self.chunk_dimensions[1] + ybackstep),
+                    x=slice((x_idx * self.yx_px_step[1]) + xbackstep, (x_idx * self.yx_px_step[1]) + self.chunk_dimensions[2] + xbackstep)
+                )
+
+                # Add to delayed task with explicit arguments
+                delayed_tasks.append(
+                    delayed(self._process_chunk)(x_idx, y_idx, chunk,
+                                                self.output_dir_path,
+                                                self.png_dir_path,
+                                                self.bands, tiff_ref))
+
+        # Compute all tasks in parallel
+        img_refs = dask.compute(*delayed_tasks)
+        tile_df = pd.DataFrame(img_refs, columns=["im_ref"])
+        tile_df.to_csv(Path.joinpath(self.output_dir_path, str(tiff_ref)+"_tile_list.csv" ))
 
         return return_value
