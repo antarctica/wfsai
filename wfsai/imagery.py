@@ -377,6 +377,7 @@ class tiling:
         self.chunk_dimensions = None
         self.yx_px_step = None
         self.bands = None
+        self.png_dir_path = None
     
     ######################################################
 # [3.0] Method for processing each chunk
@@ -391,34 +392,29 @@ class tiling:
         """Save scene as tiles using dask chunks, 
         export to geotiff and png."""
 
-        # rgb_bands = [1, 2, 3]
-
-        # Define output file name
-        tile_filename = f"{tiff_ref}_tile_{x_idx}_{y_idx}.tif"
-        png_filename = f"{tiff_ref}_tile_{x_idx}_{y_idx}.png"
-        tile_raster_path = Path.joinpath(output_dir, tile_filename)
-        tile_png_path = Path.joinpath(pngs_dir, png_filename)
-
         # If chunk is empty don't save
         if bool(chunk_data.isnull().all()):
-            #logger.info("No data (nan) found in: %s, %s ; Skipping chunk.", x_idx, y_idx)
-            return  # Skip saving empty chunks  
+            return None # Skip saving empty chunks  
 
         else:
             # Save raster tile
+            tile_filename = f"{tiff_ref}_tile_{x_idx}_{y_idx}.tif"
+            png_filename = f"{tiff_ref}_tile_{x_idx}_{y_idx}.png"
+            tile_raster_path = Path.joinpath(output_dir, tile_filename)
+
             size_string = "("+str(chunk_data.sizes["y"])+","+str(chunk_data.sizes["x"])+")"
             logger.info("Saving raster: %s %s", str(Path(tile_raster_path).name), size_string)
             chunk_data.rio.to_raster(tile_raster_path, driver="GTiff", compress='lzw')
 
             if pngs_dir is not None:
                 # Save png file
+                plt.rcParams['figure.max_open_warning'] = 500
+                tile_png_path = Path.joinpath(pngs_dir, png_filename)
                 logger.info("Saving png: %s", str(Path(tile_png_path).name))
-                #aspect_ratio = chunk_data.sizes["x"]/chunk_data.sizes["y"]
-                #chunk_data.sel(band=rgb_bands).plot.imshow(robust=True, aspect=aspect_ratio, size=6)
                 chunk_data.sel(band=rgb_bands).plot.imshow(robust=True, size=6)
                 fig = plt.gcf()
                 fig.savefig(Path(tile_png_path), bbox_inches="tight")
-                plt.close()
+                plt.close(fig)
 
             return tile_raster_path
 
@@ -450,7 +446,7 @@ class tiling:
         
         The optional png_dir_path will produce summary pngs for
         all tiles in the directory specified. If no directory is
-        specified then no pngs are created.
+        specified then no pngs are created. PNG creation is slow.
 
         The optional bands allows specific bands to be selected
         for the output tiles (this also determines the band
@@ -461,10 +457,12 @@ class tiling:
         directory for the tiles is the same as the input file's
         directory.
 
+        A reference CSV file is created in the output directory
+        showing all tiles created and their image reference.
+
         Returns None.
         """
         return_value = None
-        self.yx_px_step = yx_px_step
 
         # check the source image path
         if _check_path_(source_image_path):
@@ -488,10 +486,11 @@ class tiling:
 
         # check the output_dir
         if output_dir_path is not None:
-            if Path(output_dir_path).is_dir():
-                self.outdir = Path(output_dir_path).resolve()
+            if Path(Path(output_dir_path).resolve()).is_dir():
+                self.output_dir_path = Path(output_dir_path).resolve()
             else:
                 logger.error("output_dir_path is not a directory!")
+                self.output_dir_path = None
         else:
             self.output_dir_path = \
               Path(source_image_path).resolve().parent
@@ -503,25 +502,34 @@ class tiling:
                     self.yx_px_step = yx_px_step
                 else:
                     logger.error("yx_px_step NOT of length 2")
+                    self.yx_px_step = None
             else:
                 logger.error("yx_px_step is NOT tuple or list")
+                self.yx_px_step = None
         else:
             self.yx_px_step = self.chunk_dimensions[1:]
 
 
         # check for pngs_dir
         if png_dir_path is not None:
-            if Path(png_dir_path).is_dir():
-                self.pngdir = Path(png_dir_path)
+            if Path(Path(png_dir_path).resolve()).is_dir():
+                self.png_dir_path = Path(png_dir_path).resolve()
             else:
                 logger.error("png_dir_path is not a directory!")
+                self.png_dir_path = None
         else:
             self.png_dir_path = None
         
 
-        logger.info("Starting tiling of image: %s", str(Path(self.src).name))
         tiff_ref = os.path.basename(self.src).split(".")[0]
-        logger.info("Image tiff ref: %s", str(tiff_ref))
+        logger.info("Starting tiling of image:     %s", str(Path(self.src).name))
+        logger.info("Image tiff ref:               %s", str(tiff_ref))
+        logger.info("output_dir_path:              %s", str(self.output_dir_path))
+        logger.info("chunk_dimensions:             %s", str(self.chunk_dimensions))
+        logger.info("bands:                        %s", str(self.bands))
+        logger.info("yx_px_step:                   %s", str(self.yx_px_step))
+        logger.info("png_dir_path:                 %s", str(self.png_dir_path))
+
         raster = rxr.open_rasterio(Path(self.src),
                     chunks=self.chunk_dimensions,
                     masked=True)
@@ -551,3 +559,10 @@ class tiling:
                                                 self.output_dir_path,
                                                 self.png_dir_path,
                                                 self.bands, tiff_ref))
+
+        # Compute all tasks in parallel
+        img_refs = dask.compute(*delayed_tasks)
+        tile_df = pd.DataFrame(img_refs, columns=["im_ref"])
+        tile_df.to_csv(Path.joinpath(self.output_dir_path, str(tiff_ref)+"_tile_list.csv" ))
+
+        return return_value
