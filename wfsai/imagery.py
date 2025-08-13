@@ -2,6 +2,7 @@
 
 # File Version: 2025-05-14: First version
 #               2025-08-04: Second version
+#               2025-08-13: Added dynamic pansharpen bands
 #
 # Author: matsco@bas.ac.uk
 
@@ -104,6 +105,39 @@ class maxar:
                 )
         
         return warp_options
+
+    
+    def _get_virtual_raster_format(self, number_of_bands: int) -> str:
+        """
+        Returns the specific virtual raster bands configuration
+        in XML format.
+        """
+        virt_raster_format =       '<VRTDataset subClass="VRTPansharpenedDataset">\n'+ \
+                                   '    <PansharpeningOptions>\n'+ \
+                                   '        <PanchroBand>\n'+ \
+                                   '            <SourceFilename relativeToVRT="1">'+ \
+                                        f'{str(self.src[0])}'+'</SourceFilename>\n'+ \
+                                   '            <OpenOptions>\n'+ \
+                                   '                <OOI key="NUM_THREADS">ALL_CPUS</OOI>\n'+ \
+                                   '            </OpenOptions>\n'+ \
+                                   '            <SourceBand>1</SourceBand>\n'+ \
+                                   '        </PanchroBand>\n'
+
+        for band in range(1, number_of_bands+1):
+            virt_raster_format += f'        <SpectralBand dstBand="{str(band)}">\n'+ \
+                                   '            <SourceFilename relativeToVRT="1">'+ \
+                                            f'{str(self.src[1])}</SourceFilename>\n'+ \
+                                   '            <OpenOptions>\n'+ \
+                                   '                <OOI key="NUM_THREADS">ALL_CPUS</OOI>\n'+ \
+                                   '            </OpenOptions>\n'+ \
+                                  f'            <SourceBand>{str(band)}</SourceBand>\n'+ \
+                                   '        </SpectralBand>\n'
+
+        virt_raster_format +=      '    </PansharpeningOptions>\n'+ \
+                                   '</VRTDataset>\n'
+
+        return virt_raster_format
+
 
     def orthorectify(self,
                      source_image_path: Union[str, Path],
@@ -317,40 +351,41 @@ class maxar:
 
         ### STEP 4 - define the XML pansharpening config
         #### xml format https://gdal.org/en/stable/drivers/raster/vrt.html#gdal-vrttut-pansharpen
-        virtual_raster_format_xml = f'''
-<VRTDataset subClass="VRTPansharpenedDataset">
-    <PansharpeningOptions>
-        <PanchroBand>
-            <SourceFilename relativeToVRT="1">{str(self.src[0])}</SourceFilename>
-            <OpenOptions>
-                <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-            </OpenOptions>
-            <SourceBand>1</SourceBand>
-        </PanchroBand>
-        <SpectralBand dstBand="1">
-            <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
-            <OpenOptions>
-                <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-            </OpenOptions>
-            <SourceBand>1</SourceBand>
-        </SpectralBand>
-        <SpectralBand dstBand="2">
-            <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
-            <OpenOptions>
-                <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-            </OpenOptions>
-            <SourceBand>2</SourceBand>
-        </SpectralBand>
-        <SpectralBand dstBand="3">
-            <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
-            <OpenOptions>
-                <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-            </OpenOptions>
-            <SourceBand>3</SourceBand>
-        </SpectralBand>
-    </PansharpeningOptions>
-</VRTDataset>
-'''
+        virtual_raster_format_xml = self._get_virtual_raster_format(num_spectral_bands)
+#         virtual_raster_format_xml = f'''
+# <VRTDataset subClass="VRTPansharpenedDataset">
+#     <PansharpeningOptions>
+#         <PanchroBand>
+#             <SourceFilename relativeToVRT="1">{str(self.src[0])}</SourceFilename>
+#             <OpenOptions>
+#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
+#             </OpenOptions>
+#             <SourceBand>1</SourceBand>
+#         </PanchroBand>
+#         <SpectralBand dstBand="1">
+#             <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
+#             <OpenOptions>
+#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
+#             </OpenOptions>
+#             <SourceBand>1</SourceBand>
+#         </SpectralBand>
+#         <SpectralBand dstBand="2">
+#             <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
+#             <OpenOptions>
+#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
+#             </OpenOptions>
+#             <SourceBand>2</SourceBand>
+#         </SpectralBand>
+#         <SpectralBand dstBand="3">
+#             <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
+#             <OpenOptions>
+#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
+#             </OpenOptions>
+#             <SourceBand>3</SourceBand>
+#         </SpectralBand>
+#     </PansharpeningOptions>
+# </VRTDataset>
+# '''
         
         ### STEP 5 - Do the pan-sharpening
         outpath = str(Path.joinpath(self.out, self.opf))
