@@ -47,7 +47,8 @@ class maxar:
     def _get_warp_options(self, image_type: str, 
                             dem_path: Union[Path, None],
                             src_bands: Union[list, None],
-                            dst_bands: Union[list, None] ) -> object:
+                            dst_bands: Union[list, None],
+                            dSRS: str ) -> object:
         warp_options = None
 
         if dem_path is not None:
@@ -56,7 +57,7 @@ class maxar:
                 ####taken from https://gdal.org/en/stable/api/python/utilities.html
                 warp_options = gdal.WarpOptions(
                     rpc = True, # use rpc for georeferencing
-                    dstSRS = 'EPSG:32724',# force output projection
+                    dstSRS = str(dSRS),
                     transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
                     #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
                     xRes=self.xres, yRes=self.yres, # same as in metadata
@@ -69,7 +70,7 @@ class maxar:
                     rpc = True, # use rpc for georeferencing
                     srcBands=src_bands,
                     dstBands=dst_bands,
-                    dstSRS = 'EPSG:32724',# force output projection
+                    dstSRS = str(dSRS),
                     transformerOptions = ['RPC_DEM={}'.format(dem_path)], #see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
                     #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
                     xRes=self.xres, yRes=self.yres, # same as in metadata
@@ -82,7 +83,7 @@ class maxar:
                 #### taken from https://gdal.org/en/stable/api/python/utilities.html
                 warp_options = gdal.WarpOptions(
                     rpc = True, # use rpc for georeferencing
-                    dstSRS = 'EPSG:32724',# force output projection
+                    dstSRS = str(dSRS),
                     transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
                     #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
                     xRes=self.xres, yRes=self.yres, # same as in metadata
@@ -96,7 +97,7 @@ class maxar:
                     rpc = True, # use rpc for georeferencing
                     srcBands=src_bands,
                     dstBands=dst_bands,
-                    dstSRS = 'EPSG:32724',# force output projection
+                    dstSRS = str(dSRS),
                     transformerOptions = ['RPC_HEIGHT=0'], # see https://gdal.org/en/stable/api/gdal_alg.html#_CPPv426GDALCreateRPCTransformerV2PK13GDALRPCInfoV2idPPc
                     #outputBounds =  [681432, 3959152, 684529, 3963404], #coordinates in dstSRS to process image chip
                     xRes=self.xres, yRes=self.yres, # same as in metadata
@@ -219,6 +220,9 @@ class maxar:
             self.out = None
             return return_value
         
+        with rxr.open_rasterio(self.src, masked=True) as im:
+            dstSRS = str(im.rio.crs)
+        
         ortho_tag = "_ortho_const." if self.dem == None else "_ortho."
         self.opf = self.src.parts[-1].split(".")[:-1][0] + \
             ortho_tag + self.src.parts[-1].split(".")[-1].replace("TIL", "tif")
@@ -226,6 +230,7 @@ class maxar:
         ### STEP 2 - Print inputs and outputs
         logger.info("source_image_path:            %s", str(self.src))
         logger.info("source_type:                  %s", str(self.typ))
+        logger.info("source crs:                   %s", dstSRS)
         logger.info("digital_elevation_model_path: %s", str(self.dem))
         logger.info("output_path:                  %s", str(self.out))
         logger.info("output_file:                  %s", str(self.opf))
@@ -261,7 +266,7 @@ class maxar:
         outpath = str(Path.joinpath(self.out, self.opf))
         gdal.UseExceptions()
         ds = gdal.Warp(outpath, self.src, 
-            options=self._get_warp_options(self.typ, self.dem, src_bands, dst_bands))
+            options=self._get_warp_options(self.typ, self.dem, src_bands, dst_bands, dstSRS))
         if ds is not None:
             ds = None
             return_value = Path(outpath)
