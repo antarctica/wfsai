@@ -19,7 +19,6 @@ from typing import Literal
 from typing import Union
 from osgeo import gdal
 from math import ceil
-from numpy import zeros as np_zeros
 import pandas as pd
 from matplotlib import pyplot as plt
 from dask import delayed
@@ -603,7 +602,7 @@ class tiling:
                     chunks=self.chunk_dimensions,
                     masked=True)
 
-        # Here the original raster may need to be padded with nans
+        # Here the original raster may need to be padded with edge values
         # for uniform tile output.
         if pad_for_uniform:
             if (raster.chunks[1:][0][-1], {raster.chunks[1:][1][-1]}) != self.yx_px_step:
