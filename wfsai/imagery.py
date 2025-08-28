@@ -469,6 +469,8 @@ class tiling:
              yx_px_step: Optional[Union[tuple, list]] = None,
              png_dir_path: Optional[Union[str, Path]] = None,
              bands: Optional[list] = None,
+             backstep: Optional[bool] = False,
+             pad_for_uniform: Optional[bool] = True,
              output_dir_path: Optional[Union[str, Path]] = None) -> None:
         """
         Performs tiling of a geotiff satellite image. Given the
@@ -493,6 +495,18 @@ class tiling:
         for the output tiles (this also determines the band
         order). If bands is not specified, the original image
         bands and order are used.
+
+        The optional backstep refers to how the far right and far
+        bottom edges are tiled if the chunk dimensions are not a
+        whole multiple of the original image size. By default the
+        backstep is disabled. Enabling would force uniform chunk
+        sizes for the edges by backstepping. pad_for_uniform must
+        be disbaled for this to work.
+
+        The optional pad_for_uniform will add 'edge' padding to the
+        source imagery to allow uniform output tile dimensions
+        without using backstepping. This is enabled by default and
+        overrides any enabled backstepping.
 
         If no output_dir_path is provided then the default output
         directory for the tiles is the same as the input file's
@@ -550,6 +564,17 @@ class tiling:
         else:
             self.yx_px_step = self.chunk_dimensions[1:]
 
+        # check backstep
+        if type(backstep) is not type(False):
+            logger.error("backstep is NOT of type bool")
+            backstep = False
+        if pad_for_uniform == True:
+            backstep = False
+        
+        # check pad_for_uniform
+        if type(pad_for_uniform) is not type(False):
+            logger.error("pad_for_uniform is NOT of type bool")
+            pad_for_uniform = True
 
         # check for pngs_dir
         if png_dir_path is not None:
@@ -569,11 +594,30 @@ class tiling:
         logger.info("chunk_dimensions:             %s", str(self.chunk_dimensions))
         logger.info("bands:                        %s", str(self.bands))
         logger.info("yx_px_step:                   %s", str(self.yx_px_step))
+        logger.info("backstep_enabled:             %s", str(backstep))
+        logger.info("pad_for_uniform enabled:      %s", str(pad_for_uniform))
         logger.info("png_dir_path:                 %s", str(self.png_dir_path))
 
         raster = rxr.open_rasterio(Path(self.src),
                     chunks=self.chunk_dimensions,
                     masked=True)
+
+        # Here the original raster may need to be padded with edge values
+        # for uniform tile output.
+        if pad_for_uniform:
+            if (raster.chunks[1:][0][-1], {raster.chunks[1:][1][-1]}) != self.yx_px_step:
+                logger.info("Padding enabled and required: (%s, %s)",
+                                raster.chunks[1:][0][-1], raster.chunks[1:][1][-1])
+
+                pad_rows = (self.yx_px_step[0] - (raster.shape[1] % self.yx_px_step[0])) % self.yx_px_step[0]
+                pad_cols = (self.yx_px_step[1] - (raster.shape[2] % self.yx_px_step[1])) % self.yx_px_step[1]
+                logger.info(f"Padding (rows, cols):         (+{pad_rows}, +{pad_cols})")
+
+                padded_raster = raster.pad(
+                    pad_width={ "y": (0, pad_rows), "x": (0, pad_cols) },
+                    mode='edge')
+
+                raster = padded_raster.chunk({"x": self.chunk_dimensions[2], "y": self.chunk_dimensions[1]})
 
         # Create Dask delayed tasks for each chunk
         delayed_tasks = []
@@ -582,11 +626,14 @@ class tiling:
             
             for x_idx in range(ceil(raster.sizes["x"] / self.yx_px_step[1])):
 
-                # Account for not slicing over the right and bottom edges
-                ydim = raster.sizes["y"] - ((y_idx * self.yx_px_step[0]) + self.chunk_dimensions[1])
-                xdim = raster.sizes["x"] - ((x_idx * self.yx_px_step[1]) + self.chunk_dimensions[2])
-                ybackstep = ydim if ydim < 0 else 0
-                xbackstep = xdim if xdim < 0 else 0
+                if backstep:
+                    # Account for not slicing over the right and bottom edges
+                    ydim = raster.sizes["y"] - ((y_idx * self.yx_px_step[0]) + self.chunk_dimensions[1])
+                    xdim = raster.sizes["x"] - ((x_idx * self.yx_px_step[1]) + self.chunk_dimensions[2])
+                    ybackstep = ydim if ydim < 0 else 0
+                    xbackstep = xdim if xdim < 0 else 0
+                else:
+                    ybackstep = xbackstep = 0
 
                 # Select chunk
                 chunk = raster.isel(
