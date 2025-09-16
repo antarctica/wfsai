@@ -4,23 +4,12 @@
 #
 # Author: matsco@bas.ac.uk
 
-import sys
 import os
-import shutil
-import yaml
-import glob
-import dask
-import rioxarray as rxr
 from pathlib import Path
 from typing import Optional
 from typing import Literal
 from typing import Union
-from osgeo import gdal
-from math import ceil
-import pandas as pd
 import geopandas as gpd
-from matplotlib import pyplot as plt
-from dask import delayed
 from wfsai.configuration import _check_path_
 from wfsai.setup_logging import logger
 
@@ -158,40 +147,5 @@ class shapefile:
         final_gdf.to_file(Path.joinpath(self.out, self.opf))
 
         logger.info("Created prunelines version of %s > %s", self.src.name, self.opf)
-
-        # if pixel_size == None:
-        #     gdal.UseExceptions()
-        #     with gdal.Open(self.src) as tempds:
-        #         geotransform = tempds.GetGeoTransform()
-        #         logger.info("geotransform:                 %s", str(geotransform))
-        #         self.xres = geotransform[1]
-        #         self.yres = geotransform[5] * -1.0
-        # else:
-        #     pass
-        # logger.info("pixel_resolutions:            x: %s , y: %s", str(self.xres), str(self.yres))
-
-        # ### STEP 3.5 - Work out number of raster bands
-        # if src_bands is None:
-        #     gdal.UseExceptions()
-        #     with gdal.Open(self.src) as dataset:
-        #         numbands = dataset.RasterCount
-        #         bandlist = [i for i in range(numbands)]
-        #         bandlist = list(set([1 if i == 0 else i for i in bandlist]))
-        #         src_bands = dst_bands = bandlist
-        # elif src_bands is not None and dst_bands is None:
-        #     dst_bands = src_bands
-        # else:
-        #     pass
-        # logger.info("source bands:                 %s", str(src_bands))
-        # logger.info("destination bands:            %s", str(dst_bands))
-
-        # ### STEP 4 - Do the orthorectification
-        # outpath = str(Path.joinpath(self.out, self.opf))
-        # gdal.UseExceptions()
-        # ds = gdal.Warp(outpath, self.src, 
-        #     options=self._get_warp_options(self.typ, self.dem, src_bands, dst_bands, dstSRS))
-        # if ds is not None:
-        #     ds = None
-        #     return_value = Path(outpath)
 
         return return_value
