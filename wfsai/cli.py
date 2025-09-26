@@ -28,7 +28,15 @@ def _retrieve_remote():
  
 def main():
     """
-    cli entry point
+    Command Line Interface (CLI) entry point  
+    In a terminal invoke **wfsai** followed by your required option.
+
+    **Options:**  
+              *Optional* -v --version  
+              *Optional* -d --display  
+              *Optional* -h --help  
+              *Optional* --remote_config  
+    **Returns:** *None*  
     """
     
     parser = argparse.ArgumentParser(description=__DESCRIPTION__)
