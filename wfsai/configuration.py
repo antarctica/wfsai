@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 # File Version: 2025-01-16: First version
+#               2025-09-26: Added argument retreival
 #
 # Author: matsco@bas.ac.uk
 
@@ -11,6 +12,7 @@ import yaml
 import git
 from pathlib import Path
 from typing import Union
+from wfsai.setup_logging import logger
 
 # Base reusable methods
 def _check_path_(file_path: Union[str, Path]) -> bool:
@@ -121,4 +123,63 @@ def display(config_file_path: str) -> None:
         print(".yaml config file has no content")
     
     return None
- 
+
+
+def populate_env_variables(argument_dict: dict) -> None:
+    '''
+    Clears any pre-existing environment variable of the same
+    name, then populates it from the provided argument_dict.
+    Returns None.
+    '''
+    for name in argument_dict.keys():
+        value = argument_dict[name]
+        try:
+            _ = os.environ[str(name)]
+            os.environ.pop(name)
+            os.environ[str(name)] = str(value).strip('"')
+        except KeyError:
+            os.environ[str(name)] = str(value).strip('"')
+        logger.info(f"configuration:arguments:export env variable: {name}={value}")
+
+    return None
+
+
+def get_arguments(yaml_config_file: Union[str, Path]) -> Union[dict, None]:
+    """
+    Gets global pipeline arguments as defined in the pipeline's
+    'config.yaml' under section `pipeline_arguments`. Where no 
+    arguments are defined, returns None.
+
+    All pipeline_arguments defined are returned as a key:value 
+    dictionary. All arguments which also have 
+    `export_environment_variable: **true**` will also export
+    that argument into the environment.
+    """
+    yaml_path = Path(yaml_config_file)
+
+    ret_dictionary = {}
+    env_dictionary = {}
+
+    if _check_config_path_(yaml_path):
+        data_yaml = _load_(yaml_path)
+        if 'pipeline_arguments' in data_yaml.keys():
+            args_yaml = _load_(yaml_path)['pipeline_arguments']
+            if 'arguments' in args_yaml.keys():
+                args_list = args_yaml['arguments']
+                if type(args_list) != type(list()):
+                    args_list = [args_list, ]
+
+                for each_arg in args_list:
+                    if 'arg_name' in each_arg.keys() and \
+                            'arg_value' in each_arg.keys():
+                        ret_dictionary[each_arg['arg_name']] = each_arg['arg_value']
+                        if 'export_environment_variable' in each_arg.keys():
+                            if each_arg['export_environment_variable'] == True:
+                                env_dictionary[each_arg['arg_name']] = each_arg['arg_value']
+                
+                #logger.info(f"configuration:arguments: {ret_dictionary}")
+                if len(env_dictionary) > 0:
+                    populate_env_variables(env_dictionary)
+
+    return None if len(ret_dictionary) == 0 else ret_dictionary
+
