@@ -49,10 +49,12 @@ With either remote or local config files, you should specify the `CONFIG_FILE` e
 CONFIG_FILE=<config filename>
 ```
 
-## Usage
 From the diagram above, often the first step of AI workflow is to obtain a source dataset to answer a scientific question. Datasets may be remote or local to the working environment and it is helpful to set out a framework for how the data will be handled during the workflow.  
 For example:
 - `configuration files -> retrieving/linking of input files -> intermediate files -> outputs.`
 
-### **--help**
-*show the built-in help for the wfs-ai package*  
+## Usage (cli)
+### wfsai **--help**
+*show the built-in help for the wfsai package command line interface (cli)*  
+
+Documentation for this package is temporarily hosted [here](https://basweb.nerc-bas.ac.uk/~matsco/projects/wfsai/)
