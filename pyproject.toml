@@ -42,7 +42,8 @@ dev = [
 documentation = [
     "mkdocs",
     "mkdocs-include-markdown-plugin",
-    "mkdocstrings[python]"
+    "mkdocstrings[python]",
+    "mkdocs-autoapi"
 ]
 
 [tool.setuptools]
