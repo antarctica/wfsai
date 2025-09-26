@@ -3,9 +3,24 @@ repo_url: https://github.com/antarctica/wfsai/
 theme: readthedocs
 plugins: 
   - search
-  - mkdocstrings
   - include-markdown:
       rewrite_relative_urls: true
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: false
+            parameter_headings: true
+            show_root_full_path: true
+            group_by_category: true
+            show_category_heading: true
+            #show_symbol_type_heading: true
+          paths:
+            - "."
+  - mkdocs-autoapi:
+      autoapi_dir: wfsai
+      autoapi_add_nav_entry: Python API Reference
+
 
 nav:
   - Home: index.md

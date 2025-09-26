@@ -64,7 +64,12 @@ def retrieve_gitlab(gitlab_repository_url: str,
     current working directory.
 
     This method returns the Path to the downloaded configuration 
-    file, or None if not successful.
+    file, or None if not successful.  
+
+    **Params:**  
+     - gitlab_repository_url **`str`**  
+     - config_file_name **`str`**  
+    **Returns:** path to retrieved config **`Path`** or *None*  
     """
     return_val = None
     rdir = 'configs'
@@ -92,7 +97,12 @@ def setup_datastores(directory_path: str, config_file: str) -> None:
     """
     Set up the datastores using the provided root directory and
     yaml config file.
-    This method always returns None.
+    This method always returns None.  
+
+    **Params:**  
+     - directory_path **`str`**  
+     - config_file **`str`**  
+    **Returns:** *None*  
     """
     yaml_path = Path.joinpath(Path(str(directory_path)), str(config_file))
 
@@ -115,6 +125,9 @@ def display(config_file_path: str) -> None:
     """
     Display a summary of the supplied config file.
     This method prints to sys.stdout and returns None.
+
+    **Params:** config_file_path **`str`**  
+    **Returns:** *None*  
     """
     display_out = _load_(config_file_path)
     if display_out is not None:
@@ -129,7 +142,10 @@ def populate_env_variables(argument_dict: dict) -> None:
     '''
     Clears any pre-existing environment variable of the same
     name, then populates it from the provided argument_dict.
-    Returns None.
+    Returns None.  
+
+    **Params:** argument_dict **`dict`**  
+    **Returns:** *None*  
     '''
     for name in argument_dict.keys():
         value = argument_dict[name]
@@ -151,9 +167,12 @@ def get_arguments(yaml_config_file: Union[str, Path]) -> Union[dict, None]:
     arguments are defined, returns None.
 
     All pipeline_arguments defined are returned as a key:value 
-    dictionary. All arguments which also have 
-    `export_environment_variable: **true**` will also export
-    that argument into the environment.
+    dictionary. All arguments which have 
+    `export_environment_variable: true` will also export
+    that argument into the environment.  
+
+    **Params:** yaml_config_file **`str`** or **`Path`**  
+    **Returns:** retrieved arguments **`dict`** or *None*  
     """
     yaml_path = Path(yaml_config_file)
 
