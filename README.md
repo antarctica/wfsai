@@ -1,11 +1,30 @@
-# wfsai
-Wildlife from Space AI  
+![wildlife from space ai logo](docs/img/wildlife-from-space-ai-logo-small.png)
+
+## **W**ildlife **F**rom **S**pace **AI** - **wfsai**  
 A pip installable python package to help with the AI workflow stages of detecting Wildlife from Space.  
 
-![Typical AI Image analysis workflow](https://osu-wams-blogs-uploads.s3.amazonaws.com/blogs.dir/2115/files/2024/12/A.I.-Model-768x432.png)  
-(diagram courtesy of [this](https://blogs.oregonstate.edu/gemmlab/2024/12/23/demystifying-ai-a-brief-overview-of-image-pre-processing-and-a-machine-learning-workflow/) blogpost.)
+The features of the `wfsai` package include:  
+
+- Handling configuration based AI pipeline workflow/execution.
+- Setting up reproducible file/directory compute environments.
+- Retrieving local and remote datasets/configs.
+- Ortho-rectification of VHR satellite imagery (using GDAL).
+- Pan-sharpening of VHR satellite imagery (using GDAL, "weighted" Brovey algorithm).
+- Tiling of VHR satellite imagery.
+- Masking of VHR satellite imagery to shapefile with optional shapefile dilation.
+
+---
 
 Documentation for this package is temporarily hosted [here](https://basweb.nerc-bas.ac.uk/~matsco/projects/wfsai/)
+
+---
+
+This python package aims to integrate with the common AI workflow shown in the diagram below:  
+
+![Typical AI Image analysis workflow](docs/img/A.I.-Model-768x432.png)  
+(diagram courtesy of [this](https://blogs.oregonstate.edu/gemmlab/2024/12/23/demystifying-ai-a-brief-overview-of-image-pre-processing-and-a-machine-learning-workflow/) blogpost. original diagram [here](https://osu-wams-blogs-uploads.s3.amazonaws.com/blogs.dir/2115/files/2024/12/A.I.-Model-768x432.png))
+
+---
 
 ## Installation
 > ### pip
@@ -16,7 +35,7 @@ Documentation for this package is temporarily hosted [here](https://basweb.nerc-
 > `conda/mamba activate <environment-name>`  
 > `pip install git+https://github.com/antarctica/wfsai.git@main`  
 
-> ### GDAL
+### GDAL
 Some of the modules within this `wfsai` package make use of the **gdal** python implementation, including it's underlying dependencies. We found that the best way to handle **gdal** and it's dependencies is to use a mamba environment with the mamba dependency solver. If you are using a conda/mamba environment in your project then simply include **gdal** as a dependency in your environment.yaml or use the command:  
 > `conda install -n <environment-name> -c conda-forge gdal`  
 
