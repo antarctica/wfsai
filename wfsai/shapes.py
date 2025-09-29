@@ -43,7 +43,7 @@ class shapefile:
 
         The erosion is performed to dispose of the tiny width
         lines and then the erosion is reversed to restore the
-        approzimate original areas of the 'non-zero-area' shapes.
+        approximate original areas of the 'non-zero-area' shapes.
 
         Greater erode_distance values give stronger erosion. The
         default value is 0.75.
@@ -57,7 +57,17 @@ class shapefile:
         appended to the filename.
 
         Returns the path of the successfully pruned shapefile.
-        Otherwise returns None.
+        Otherwise returns None.  
+
+        **Params:**  
+        source_aoi_path **`str`** or **`Path`**  
+         - *Optional* erode_distance **`float`** or **`int`** , default=0.75  
+         - *Optional* max_cull_area **`float`** or **`int`** , default=0.0  
+         - *Optional* output_path **`str`** or **`Path`**  
+        **Returns:** **`Path`** or *None*  
+        
+        ---  
+
         """
         return_value = None
 

@@ -49,6 +49,21 @@ class maxar:
                             src_bands: Union[list, None],
                             dst_bands: Union[list, None],
                             dSRS: str ) -> object:
+        """
+        Generates the required warp options to be used by
+        the GDAL ortho-rectify method.  
+
+        **Params:**  
+        image_type **`str`**
+         - dem_path **`Path`** or *None*  
+         - src_bands **`list`** of **`int`** or *None*   
+         - dst_bands **`list`** of **`int`** or *None*  
+         - dSRS **`str`**  
+        **Returns:** warp_options **`object`** 
+        
+        ---  
+
+        """
         warp_options = None
 
         if dem_path is not None:
@@ -111,7 +126,13 @@ class maxar:
     def _get_virtual_raster_format(self, number_of_bands: int) -> str:
         """
         Returns the specific virtual raster bands configuration
-        in XML format.
+        in XML format.  
+
+        **Params:** number_of_bands **`int`**  
+        **Returns:** **`str`** 
+        
+        ---  
+
         """
         virt_raster_format =       '<VRTDataset subClass="VRTPansharpenedDataset">\n'+ \
                                    '    <PansharpeningOptions>\n'+ \
@@ -167,7 +188,20 @@ class maxar:
         be performed on all bands in the original order.
 
         Returns the path of the successfully orthorectified
-        output file. Otherwise returns None.
+        output file. Otherwise returns None.  
+
+        **Params:**  
+        source_image_path **`str`** or **`Path`**  
+        source_type **`str`** 'pan' or 'mul'  
+         - *Optional* pixel_size **`tuple`** or **`list`**  
+         - *Optional* src_bands **`list`**  
+         - *Optional* dst_bands **`list`**  
+         - *Optional* dem_path **`str`** or **`Path`**  
+         - *Optional* output_path **`str`** or **`Path`**  
+        **Returns:** **`Path`** or *None*  
+        
+        ---  
+
         """
         return_value = None
 
@@ -294,7 +328,16 @@ class maxar:
         file is created in the current working directory.
 
         Returns the path of the successfully orthorectified
-        output file. Otherwise returns None.
+        output file. Otherwise returns None.  
+
+        **Params:**  
+        pan_image_path **`str`** or **`Path`**  
+        mul_image_path **`str`** or **`Path`**  
+         - *Optional* output_path **`str`** or **`Path`**  
+        **Returns:** **`Path`** or *None*  
+        
+        ---  
+
         """
         return_value = None
 
@@ -357,40 +400,7 @@ class maxar:
         ### STEP 4 - define the XML pansharpening config
         #### xml format https://gdal.org/en/stable/drivers/raster/vrt.html#gdal-vrttut-pansharpen
         virtual_raster_format_xml = self._get_virtual_raster_format(num_spectral_bands)
-#         virtual_raster_format_xml = f'''
-# <VRTDataset subClass="VRTPansharpenedDataset">
-#     <PansharpeningOptions>
-#         <PanchroBand>
-#             <SourceFilename relativeToVRT="1">{str(self.src[0])}</SourceFilename>
-#             <OpenOptions>
-#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-#             </OpenOptions>
-#             <SourceBand>1</SourceBand>
-#         </PanchroBand>
-#         <SpectralBand dstBand="1">
-#             <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
-#             <OpenOptions>
-#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-#             </OpenOptions>
-#             <SourceBand>1</SourceBand>
-#         </SpectralBand>
-#         <SpectralBand dstBand="2">
-#             <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
-#             <OpenOptions>
-#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-#             </OpenOptions>
-#             <SourceBand>2</SourceBand>
-#         </SpectralBand>
-#         <SpectralBand dstBand="3">
-#             <SourceFilename relativeToVRT="1">{str(self.src[1])}</SourceFilename>
-#             <OpenOptions>
-#                 <OOI key="NUM_THREADS">ALL_CPUS</OOI>
-#             </OpenOptions>
-#             <SourceBand>3</SourceBand>
-#         </SpectralBand>
-#     </PansharpeningOptions>
-# </VRTDataset>
-# '''
+
         
         ### STEP 5 - Do the pan-sharpening
         outpath = str(Path.joinpath(self.out, self.opf))
@@ -430,8 +440,23 @@ class tiling:
                        pngs_dir,
                        rgb_bands,
                        tiff_ref):
-        """Save scene as tiles using dask chunks, 
-        export to geotiff and png."""
+        """
+        Save scene as tiles using dask chunks, 
+        export to geotiff and png.  
+
+        **Params:**  
+         - x_idx **`str`** or **`Path`**  
+         - y_idx **`str`** 'pan' or 'mul'  
+         - chunk_data **`tuple`** or **`list`**  
+         - output_dir **`list`**  
+         - pngs_dir **`list`**  
+         - rgb_bands **`str`** or **`Path`**  
+         - tiff_ref **`str`** or **`Path`**  
+        **Returns:** **`Path`** or *None*  
+        
+        ---  
+
+        """
 
         # If chunk is empty don't save
         if bool(chunk_data.isnull().all()):

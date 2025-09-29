@@ -13,14 +13,21 @@ from wfsai.configuration import _load_
 from wfsai.setup_logging import logger
 
 
-
 def pipeline_element_enabled(element_name: str, config_yaml_path: Union[Path, str]) -> bool:
     """
     Checks the provided config_yaml to see if the specified element name is
     enabled or disabled.  
 
     Returns False if enabled == false in the config.
-    Returns True otherwise.
+    Returns True otherwise.  
+
+    **Params:**  
+     - element_name **`str`**  
+     - config_yaml_path **`Path`** or **`str`**    
+    **Returns:** **`bool`**    
+    
+    ---  
+    
     """
     return_value = True
 

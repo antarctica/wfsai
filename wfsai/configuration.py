@@ -18,7 +18,13 @@ from wfsai.setup_logging import logger
 def _check_path_(file_path: Union[str, Path]) -> bool:
     """
     Check that the file of a path exists and that it
-    is not a directory.
+    is not a directory.  
+
+    **Params:** file_path **`str`** or **`Path`**  
+    **Returns:** **`bool`**  
+    
+    ---  
+    
     """
     return Path(file_path).exists() and not \
            Path(file_path).is_dir()
@@ -29,7 +35,13 @@ def _check_config_path_(config_file_path: Union[str, Path]) -> bool:
     Check that the config file path points to a file that exists and
     that the format is yaml.
     This method returns a boolean True if the path is valid,
-    otherwise False.
+    otherwise False.  
+
+    **Params:** config_file_path **`str`** or **`Path`**  
+    **Returns:** **`bool`**  
+    
+    ---  
+    
     """
     return _check_path_(Path(config_file_path)) and \
            Path(config_file_path).suffix == '.yaml'
@@ -38,7 +50,13 @@ def _load_(config_file_path: str) -> Union[str, None]:
     """
     Load workflow configuration from the supplied configuration yaml.
     This method returns the loaded yaml content if successful, 
-    otherwise returning None.
+    otherwise returning None.  
+
+    **Params:** file_path **`str`**  
+    **Returns:** **`str`** or *None*  
+    
+    ---  
+    
     """
     try:
         if _check_config_path_(config_file_path):
@@ -70,6 +88,9 @@ def retrieve_gitlab(gitlab_repository_url: str,
      - gitlab_repository_url **`str`**  
      - config_file_name **`str`**  
     **Returns:** path to retrieved config **`Path`** or *None*  
+    
+    ---  
+    
     """
     return_val = None
     rdir = 'configs'
@@ -103,6 +124,9 @@ def setup_datastores(directory_path: str, config_file: str) -> None:
      - directory_path **`str`**  
      - config_file **`str`**  
     **Returns:** *None*  
+    
+    ---  
+    
     """
     yaml_path = Path.joinpath(Path(str(directory_path)), str(config_file))
 
@@ -128,6 +152,9 @@ def display(config_file_path: str) -> None:
 
     **Params:** config_file_path **`str`**  
     **Returns:** *None*  
+
+    ---  
+    
     """
     display_out = _load_(config_file_path)
     if display_out is not None:
@@ -146,6 +173,9 @@ def populate_env_variables(argument_dict: dict) -> None:
 
     **Params:** argument_dict **`dict`**  
     **Returns:** *None*  
+    
+    ---  
+    
     '''
     for name in argument_dict.keys():
         value = argument_dict[name]
@@ -173,6 +203,9 @@ def get_arguments(yaml_config_file: Union[str, Path]) -> Union[dict, None]:
 
     **Params:** yaml_config_file **`str`** or **`Path`**  
     **Returns:** retrieved arguments **`dict`** or *None*  
+    
+    ---  
+    
     """
     yaml_path = Path(yaml_config_file)
 

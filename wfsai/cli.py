@@ -13,6 +13,17 @@ __DESCRIPTION__ = "Command Line interface for Wildlife from Space AI tools"
 
 
 def _retrieve_remote():
+    """
+    Retrieve remote (git) config.  
+    Repository url environment variable: 'REMOTE_CONFIG_REPO'  
+    Config file name environment variable: 'CONFIG_FILE'  
+
+    **Params:** *None*  
+    **Returns:** *None*  
+    
+    ---  
+    
+    """
     try:
         repo = os.environ['REMOTE_CONFIG_REPO']
     except KeyError:
@@ -32,11 +43,14 @@ def main():
     In a terminal invoke **wfsai** followed by your required option.
 
     **Options:**  
-              *Optional* -v --version  
-              *Optional* -d --display  
-              *Optional* -h --help  
-              *Optional* --remote_config  
+     - *Optional* -v --version  
+     - *Optional* -d --display  
+     - *Optional* -h --help  
+     - *Optional* --remote_config  
     **Returns:** *None*  
+    
+    ---  
+    
     """
     
     parser = argparse.ArgumentParser(description=__DESCRIPTION__)
