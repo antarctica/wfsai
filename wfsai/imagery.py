@@ -54,7 +54,7 @@ class maxar:
         the GDAL ortho-rectify method.  
 
         **Params:**  
-        image_type **`str`**
+         - image_type **`str`**
          - dem_path **`Path`** or *None*  
          - src_bands **`list`** of **`int`** or *None*   
          - dst_bands **`list`** of **`int`** or *None*  
@@ -191,8 +191,8 @@ class maxar:
         output file. Otherwise returns None.  
 
         **Params:**  
-        source_image_path **`str`** or **`Path`**  
-        source_type **`str`** 'pan' or 'mul'  
+         - source_image_path **`str`** or **`Path`**  
+         - source_type **`str`** 'pan' or 'mul'  
          - *Optional* pixel_size **`tuple`** or **`list`**  
          - *Optional* src_bands **`list`**  
          - *Optional* dst_bands **`list`**  
@@ -331,8 +331,8 @@ class maxar:
         output file. Otherwise returns None.  
 
         **Params:**  
-        pan_image_path **`str`** or **`Path`**  
-        mul_image_path **`str`** or **`Path`**  
+         - pan_image_path **`str`** or **`Path`**  
+         - mul_image_path **`str`** or **`Path`**  
          - *Optional* output_path **`str`** or **`Path`**  
         **Returns:** **`Path`** or *None*  
         
@@ -433,25 +433,25 @@ class tiling:
     ######################################################
 # [3.0] Method for processing each chunk
     def _process_chunk(self,
-                       x_idx,
-                       y_idx,
+                       x_idx: int,
+                       y_idx: int,
                        chunk_data,
-                       output_dir,
-                       pngs_dir,
-                       rgb_bands,
-                       tiff_ref):
+                       output_dir: Union[str, Path],
+                       pngs_dir: Union[str, Path],
+                       rgb_bands: list,
+                       tiff_ref: str) -> Path:
         """
         Save scene as tiles using dask chunks, 
         export to geotiff and png.  
 
         **Params:**  
-         - x_idx **`str`** or **`Path`**  
-         - y_idx **`str`** 'pan' or 'mul'  
-         - chunk_data **`tuple`** or **`list`**  
-         - output_dir **`list`**  
-         - pngs_dir **`list`**  
-         - rgb_bands **`str`** or **`Path`**  
-         - tiff_ref **`str`** or **`Path`**  
+         - x_idx **`int`**  
+         - y_idx **`int`**  
+         - chunk_data **`np.array`**  
+         - output_dir **`str`** or **`Path`**  
+         - pngs_dir **`str`** or **`Path`**  
+         - rgb_bands **`list`**  
+         - tiff_ref **`str`**  
         **Returns:** **`Path`** or *None*  
         
         ---  
@@ -540,7 +540,21 @@ class tiling:
         A reference CSV file is created in the output directory
         showing all tiles created and their image reference.
 
-        Returns None.
+        Returns None.  
+
+        **Params:**  
+         - source_image_path **`str`** or **`Path`**  
+         - chunk_dimensions **`tuple`** or **`list`**  
+         - *Optional* yx_px_step **`tuple`** or **`list`**  
+         - *Optional* png_dir_path **`str`** or **`Path`**  
+         - *Optional* bands **`list`**  
+         - *Optional* backstep **`bool`**  
+         - *Optional* pad_for_uniform **`bool`**  
+         - *Optional* output_dir_path **`str`** or **`Path`**  
+        **Returns:** *None*  
+                
+        ---  
+
         """
         return_value = None
 
