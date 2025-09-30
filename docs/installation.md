@@ -14,8 +14,10 @@ source activate <path-of-your-venv>
 > `pip install git+https://github.com/antarctica/wfsai.git@main`  
 
 ## GDAL
-Some of the modules within this `wfsai` package make use of the **gdal** python implementation, including it's underlying dependencies. We found that the best way to handle **gdal** and it's dependencies is to use a mamba environment with the mamba dependency solver. If you are using a conda/mamba environment in your project then simply include **gdal** as a dependency in your environment.yaml or use the command:  
+The 'imagery' module within the `wfsai` package makes use of the **gdal** python implementation, including it's underlying dependencies. We found that the best way to handle **gdal** and it's dependencies is to use a mamba environment with the mamba dependency solver. If you are using a conda/mamba environment in your project then simply include **gdal** as a dependency in your environment.yaml or use the command:  
 > `conda install -n <environment-name> -c conda-forge gdal`  
+
+If not using the 'imagery' module then **gdal** installation is not required.  
 
 ## Environment Variables
 If retrieving a configuration from a remote repository then specify the `REMOTE_CONFIG_REPO` environment variable.
