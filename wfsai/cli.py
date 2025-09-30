@@ -57,7 +57,7 @@ def main():
     parser.add_argument('-v', '--version', help="show this package version and exit",
                         action='version', version=__version__)
     parser.add_argument("-d", "--display", help="display configuration",
-                        action="store", dest='display', default=None)
+                        action="store", dest='conf_file', default=None)
     parser.add_argument("--remote_config", help="retrieve the remote configuration file",
                         action="store_true", dest='remote_conf', default=False)
     args = parser.parse_args()

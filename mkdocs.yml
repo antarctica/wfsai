@@ -1,6 +1,9 @@
 site_name: wildlife from space ai
 repo_url: https://github.com/antarctica/wfsai/
-theme: readthedocs
+theme: 
+    name: readthedocs
+    logo: img/bas-logo-inverse-transparent-64.png
+
 plugins: 
   - search
   - include-markdown:
