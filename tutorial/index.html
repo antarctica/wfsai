@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Tutorial - wildlife from space ai</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css" />
+        <link href="../assets/_mkdocstrings.css" rel="stylesheet" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Tutorial";
+        var mkdocs_page_input_path = "tutorial.md";
+        var mkdocs_page_url = null;
+      </script>
+    
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+      <script>hljs.highlightAll();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="..">
+          <img src="../img/bas-logo-inverse-transparent-64.png" class="logo" alt="Logo"/>
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">Home</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../implementation/">Implementation</a>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../installation/">Installation</a>
+                </li>
+              </ul>
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href="#">Tutorial</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#ortho-rectification-of-maxar-worldview-imagery">Ortho-rectification of MAXAR Worldview imagery</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#pan-sharpening-of-ortho-rectified-maxar-worldview-imagery">Pan-sharpening of ortho-rectified MAXAR Worldview imagery</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#mask-processed-image-to-area-of-interest-shapefile">Mask processed image to Area-of-interest shapefile</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#tile-a-masked-or-unmasked-image">Tile a masked (or unmasked) image</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../development/">Development</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">Python API Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="../autoapi/wfsai/">wfsai</a>
+    <ul>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/cli/">cli</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/configuration/">configuration</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/data/">data</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/execution/">execution</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/imagery/">imagery</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/setup_logging/">setup_logging</a>
+                </li>
+                <li class="toctree-l2"><a class="reference internal" href="../autoapi/wfsai/shapes/">shapes</a>
+                </li>
+    </ul>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">wildlife from space ai</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" aria-label="Docs"></a></li>
+      <li class="breadcrumb-item active">Tutorial</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/antarctica/wfsai/edit/master/docs/tutorial.md" class="icon icon-github"> Edit on GitHub</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="tutorial">Tutorial</h1>
+<p>These tutorials rely on the <code>wfsai</code> python package being installed in your environment. You will also need to install the <strong>gdal</strong> python implementation. For this please refer to the <a href="../installation/">Installation</a> page.</p>
+<hr />
+<ul>
+<li>
+<h2 id="ortho-rectification-of-maxar-worldview-imagery">Ortho-rectification of MAXAR Worldview imagery</h2>
+</li>
+</ul>
+<pre><code class="language-python">from wfsai import imagery
+
+# Set up maxar image processor
+m = imagery.maxar()
+DEM_FILE = 'path_to_digital_elevation_model/DEM_REMA_mosaic_2m.tif'
+PAN_FILE = 'path_to_panchromatic_sat_image/24OCT21115056-P2AS-016418161040_01_P002.TIL'
+MUL_FILE = 'path_to_multispectral_sat_image/24OCT21115057-M2AS-016418161040_01_P002.TIL'
+
+# Orthorectify PAN file using Digital Elevation Model
+m.orthorectify(PAN_FILE, source_type='pan', dem_path=DEM_FILE)
+
+# Orthorectify PAN file without using Digital Elevation Model
+m.orthorectify(PAN_FILE, source_type='pan')
+
+# Orthorectify MUL file using Digital Elevation Model
+m.orthorectify(MUL_FILE, source_type='mul', dem_path=DEM_FILE, pixel_size=(1.2, 1.2))
+
+# Orthorectify MUL file without using Digital Elevation Model
+m.orthorectify(MUL_FILE, source_type='mul', pixel_size=(1.2, 1.2))
+</code></pre>
+<hr />
+<ul>
+<li>
+<h2 id="pan-sharpening-of-ortho-rectified-maxar-worldview-imagery">Pan-sharpening of ortho-rectified MAXAR Worldview imagery</h2>
+</li>
+</ul>
+<pre><code class="language-python">from wfsai import imagery
+
+# Set up maxar image processor
+m = imagery.maxar()
+
+# Pan-Sharpen PAN &amp; MUL using Digital Elevation Model
+ORTHO_PAN_FILE = './24OCT21115056-P2AS-016418161040_01_P002_ortho.tif'
+ORTHO_MUL_FILE = './24OCT21115057-M2AS-016418161040_01_P002_ortho.tif'
+m.pansharpen(ORTHO_PAN_FILE, ORTHO_MUL_FILE)
+
+# Pan-Sharpen PAN &amp; MUL without using Digital Elevation Model
+CONST_PAN_FILE = './24OCT21115056-P2AS-016418161040_01_P002_ortho_const.tif'
+CONST_MUL_FILE = './24OCT21115057-M2AS-016418161040_01_P002_ortho_const.tif'
+m.pansharpen(CONST_PAN_FILE, CONST_MUL_FILE)
+</code></pre>
+<hr />
+<ul>
+<li>
+<h2 id="mask-processed-image-to-area-of-interest-shapefile">Mask processed image to Area-of-interest shapefile</h2>
+</li>
+</ul>
+<pre><code class="language-python"># TODO
+</code></pre>
+<hr />
+<ul>
+<li>
+<h2 id="tile-a-masked-or-unmasked-image">Tile a masked (or unmasked) image</h2>
+</li>
+</ul>
+<pre><code class="language-python">from wfsai import imagery
+
+#            (bands, y_size, x_size)
+CHUNK_SIZE = (4,     200,    200)
+
+PANSHARPENED_FILE = './24OCT21115057-M2AS-016418161040_01_P002_ortho_psh.tif'
+
+t = imagery.tiling()
+
+t.tile(PANSHARPENED_FILE, CHUNK_SIZE, output_dir_path=output_tiles_dir)
+</code></pre>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../installation/" class="btn btn-neutral float-left" title="Installation"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../development/" class="btn btn-neutral float-right" title="Development">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+        <span>
+          <a href="https://github.com/antarctica/wfsai/" class="fa fa-github" style="color: #fcfcfc"> GitHub</a>
+        </span>
+    
+    
+      <span><a href="../installation/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../development/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script src="../js/jquery-3.6.0.min.js"></script>
+    <script>var base_url = "..";</script>
+    <script src="../js/theme_extra.js"></script>
+    <script src="../js/theme.js"></script>
+      <script src="../search/main.js"></script>
+    <script>
+        jQuery(function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        });
+    </script>
+
+</body>
+</html>
