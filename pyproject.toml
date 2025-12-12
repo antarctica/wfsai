@@ -33,6 +33,8 @@ dynamic = ["version", ]
 dependencies = [
     "pyyaml",
     "gitpython",
+    "dask",
+    "rioxarray",
 ]
 
 [project.optional-dependencies]
