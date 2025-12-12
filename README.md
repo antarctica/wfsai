@@ -15,7 +15,7 @@ The features of the `wfsai` package include:
 
 ---
 
-Documentation for this package is temporarily hosted [here]()
+Documentation for this package is hosted [here](https://antarctica.github.io/wfsai)
 
 ---
 
